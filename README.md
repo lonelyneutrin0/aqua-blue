@@ -46,6 +46,6 @@ prediction = esn.predict(horizon=1_000)
 
 ---
 
-![Blue](https://github.com/Chicago-Club-Management-Company/aqua-blue/assets/blue.jpg)
+![Blue](https://raw.githubusercontent.com/Chicago-Club-Management-Company/aqua-blue/refs/heads/main/assets/blue.jpg)
 
 *Blue, the cat behind `aqua-blue`.*
