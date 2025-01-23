@@ -10,7 +10,7 @@ Lightweight and basic reservoir computing library
 
 ## 📥 Installation
 
-aqua-blue is on PyPI, and can therefore be installed with pip:
+`aqua-blue` is on PyPI, and can therefore be installed with pip:
 
 ```bash
 pip install aqua-blue
@@ -39,3 +39,13 @@ esn.train(time_series)
 # predict 1,000 steps into the future
 prediction = esn.predict(horizon=1_000)
 ```
+
+## 📃 License
+
+`aqua-blue` is released under the MIT License.
+
+---
+
+![Blue](https://github.com/Chicago-Club-Management-Company/aqua-blue/assets/blue.jpg)
+
+*Blue, the cat behind `aqua-blue`.*
