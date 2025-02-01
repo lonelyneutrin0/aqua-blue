@@ -16,15 +16,19 @@ class TimeSeries:
     def __post_init__(self):
 
         timesteps = np.diff(self.times)
-        assert np.isclose(np.std(timesteps), 0.0)
+        if not np.isclose(np.std(timesteps), 0.0):
+            raise ValueError("TimeSeries.times must be uniformly spaced")
+        if np.isclose(np.mean(timesteps), 0.0):
+            raise ValueError("TimeSeries.times must have a timestep greater than zero")
 
     def save(self, file: IO, header="", delimiter=","):
-        np.savetxt(file,
-                   np.vstack((self.times, self.dependent_variable.T)).T,
-                   delimiter=delimiter,
-                   header=header,
-                   comments=""
-                   )
+        np.savetxt(
+            file,
+            np.vstack((self.times, self.dependent_variable.T)).T,
+            delimiter=delimiter,
+            header=header,
+            comments=""
+        )
 
     @property
     def num_dims(self) -> int:
@@ -44,3 +48,9 @@ class TimeSeries:
     def timestep(self) -> float:
 
         return self.times[1] - self.times[0]
+
+    def __eq__(self, other) -> bool:
+
+        return np.all(self.times == other.times) and np.all(
+            np.isclose(self.dependent_variable, other.dependent_variable)
+        )
