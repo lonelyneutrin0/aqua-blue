@@ -19,6 +19,7 @@ pip install aqua-blue
 ## 📝 Quickstart
 
 ```py
+import numpy as np
 from aqua_blue import TimeSeries, EchoStateNetwork
 
 # generate arbitrary two-dimensional time series
