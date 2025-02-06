@@ -7,6 +7,9 @@ jobs:
   prebuild:
     name: test, lint, and type check
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
     permissions:
       contents: read
 
@@ -34,6 +37,9 @@ jobs:
   quickstart:
     name: run quickstart
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
     permissions:
       contents: read
 
@@ -58,6 +64,7 @@ jobs:
   build:
     needs:
       - prebuild
+      - quickstart
     name: build distribution
     runs-on: ubuntu-latest
     permissions:
@@ -81,6 +88,7 @@ jobs:
         with:
           name: python-package-distributions
           path: dist/
+
   pypi-publish:
     needs:
       - build
