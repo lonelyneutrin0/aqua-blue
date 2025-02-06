@@ -35,7 +35,7 @@ jobs:
     name: run quickstart
     runs-on: ubuntu-latest
     permissions:
-      content: read
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
