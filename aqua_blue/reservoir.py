@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Optional, Callable, Union
+import warnings
 
 import numpy as np
 from numpy.typing import NDArray
@@ -42,7 +43,7 @@ class EchoStateNetwork:
                 size=(self.reservoir_dimensionality, self.input_dimensionality)
             )
 
-    def train(self, input_time_series: TimeSeries):
+    def train(self, input_time_series: TimeSeries, pinv: bool = False):
 
         """
         solve argmin_W ||Y - WX||^2 + λ||W||^2
@@ -57,10 +58,22 @@ class EchoStateNetwork:
         dependent_variables = time_series_array[1:]
 
         regularization = self.regularization_parameter * np.eye(independent_variables.shape[1])
-        w_out_transpose = np.linalg.solve(
-            independent_variables.T @ independent_variables + regularization,
-            independent_variables.T @ dependent_variables
-        )
+
+        if pinv:
+            w_out_transpose = np.linalg.pinv(independent_variables) @ dependent_variables
+        else:
+            x = independent_variables.T @ independent_variables + regularization
+
+            # conditional number 
+            cond_num = np.linalg.cond(x)
+            if cond_num > 10: 
+                warnings.warn(f"Condition Number {cond_num:.2E} is greater than 10, consider passing pinv = True in {self.__class__.__name__}.train() or increasing {self.__class__.__name__}.regularization_parameter")
+
+            w_out_transpose = np.linalg.solve(
+                x,
+                independent_variables.T @ dependent_variables
+            )
+            
         self.w_out = w_out_transpose.T
         self.feedback_loop_guess = time_series_array[-1]
 
