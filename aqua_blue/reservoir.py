@@ -25,8 +25,6 @@ class EchoStateNetwork:
     feedback_loop_guess: Union[float, NDArray] = field(init=False)
     timestep: float = field(init=False)
     final_time: float = field(init=False)
-    test_data: Optional[NDArray] = None
-    prediction_data: Optional[NDArray] = None 
 
     def __post_init__(self):
 
@@ -105,10 +103,3 @@ class EchoStateNetwork:
             dependent_variable=predictions,
             times=self.final_time + self.timestep + np.linspace(0, horizon * self.timestep, horizon)
         )
-    
-    def RMSE(self, test_data, prediction_data):
-        RMSE = np.sqrt(np.mean((test_data - prediction_data) ** 2))
-        return RMSE
-        
-    
-        
