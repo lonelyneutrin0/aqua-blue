@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aqua-blue"
+dynamic = ["version"]
+description = "Lightweight and basic reservoir computing library"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "Jacob Jeffries", email = "jacob.jeffries@chicagoclubteam.org" },
+    { name = "Ameen Mahmood", email = "ameen.mahmood@chicagoclubteam.org" }
+]
+keywords = [
+    "computing",
+    "forecasting",
+    "learning",
+    "machine",
+    "prediction",
+    "reservoir",
+    "series",
+    "time",
+]
+classifiers = [
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "numpy ~= 2.0.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/Chicago-Club-Management-Company/aqua-blue"
+
+[tool.hatch.version]
+path = "aqua_blue/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/aqua_blue",
+]

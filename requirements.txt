@@ -1,5 +1,0 @@
-numpy~=2.0.2
-pytest~=8.0.2
-setuptools~=58.1.0
-mypy~=1.13.0
-ruff~=0.9.4
