@@ -20,7 +20,9 @@ jobs:
           python-version: "3.x"
       - name: Set up environment
         run: >-
-          pip install -r requirements.txt
+          pip install .
+          pip install pytest~=8.0.2
+          pip install ruff~=0.9.4
       - name: Test with pytest
         run: >-
           pytest
