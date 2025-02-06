@@ -5,7 +5,7 @@ on: push
 jobs:
 
   prebuild:
-    name: test, lint, and type check
+    name: test, lint, type check
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -20,7 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: ${{ matrix.python-version }}
       - name: Set up environment
         run: >-
           pip install .[dev]
@@ -50,7 +50,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: ${{ matrix.python-version }}
       - name: Set up non-developer environment
         run: >-
           pip install .
