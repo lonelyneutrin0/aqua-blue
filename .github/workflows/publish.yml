@@ -20,10 +20,7 @@ jobs:
           python-version: "3.x"
       - name: Set up environment
         run: >-
-          pip install hatchling
-          pip install aqua_blue/ --verbose
-          pip install pytest~=8.0.2
-          pip install ruff~=0.9.4
+          pip install hatchling . pytest~=8.0.2 ruff~=0.9.4 --verbose
       - name: Test with pytest
         run: >-
           pytest
