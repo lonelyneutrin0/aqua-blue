@@ -5,7 +5,7 @@ on: push
 jobs:
 
   prebuild:
-    name: test and lint
+    name: test, lint, and type check
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -30,6 +30,30 @@ jobs:
       - name: Type check with mypy
         run: >-
           mypy aqua_blue/
+
+  quickstart:
+    name: run quickstart
+    runs-on: ubuntu-latest
+    permissions:
+      content: read
+
+    steps:
+      - uses: actions/checkout@v4
+          with:
+            persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Set up non-developer environment
+        run: >-
+          pip install .
+      - name: Extract quickstart from README.md
+        run: >-
+          awk '/```py/,/```/' README.md | sed '1d;$d' > _quickstart.py
+      - name: Run quickstart script
+        run: >-
+          python _quickstart.py
 
   build:
     needs:

@@ -1,4 +1,4 @@
-__version__ = "0.0.9"
+__version__ = "0.0.10"
 __authors__ = ["Jacob Jeffries", "Ameen Mahmood"]
 __author_emails__ = ["jacob.jeffries@chicagoclubteam.org", "ameen.mahmood@chicagoclubteam.org"]
 __url__ = "https://github.com/Chicago-Club-Management-Company/aqua-blue"
