@@ -3,7 +3,7 @@ from io import BytesIO
 import pytest
 import numpy as np
 
-from aqua_blue import TimeSeries, utilities
+from aqua_blue import EchoStateNetwork, TimeSeries, utilities, InstabilityWarning
 
 
 def test_non_uniform_timestep_error():
@@ -37,3 +37,22 @@ def test_normalizer_inversion():
     t_denormalized = normalizer.denormalize(t_normalized)
 
     assert t_original == t_denormalized
+
+
+def test_condition_number_warning():
+
+    times = np.arange(10)
+    dependent_variables = np.vstack((np.cos(times), np.sin(times))).T
+    t = TimeSeries(dependent_variable=dependent_variables, times=np.arange(10))
+    esn = EchoStateNetwork(reservoir_dimensionality=10, input_dimensionality=2, regularization_parameter=0.0)
+    with pytest.warns(InstabilityWarning):
+        esn.train(t)
+
+
+def test_pinv_workaround():
+
+    times = np.arange(10)
+    dependent_variables = np.vstack((np.cos(times), np.sin(times))).T
+    t = TimeSeries(dependent_variable=dependent_variables, times=np.arange(10))
+    esn = EchoStateNetwork(reservoir_dimensionality=10, input_dimensionality=2, regularization_parameter=0.0)
+    esn.train(t, pinv=True)

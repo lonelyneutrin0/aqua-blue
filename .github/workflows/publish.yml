@@ -20,13 +20,16 @@ jobs:
           python-version: "3.x"
       - name: Set up environment
         run: >-
-          pip install hatchling . pytest~=8.0.2 ruff~=0.9.4 --verbose
+          pip install .[dev]
       - name: Test with pytest
         run: >-
-          pytest
+          pytest -W error
       - name: Lint with ruff
         run: >-
           ruff check aqua_blue/
+      - name: Type check with mypy
+        run: >-
+          mypy aqua_blue/
 
   build:
     needs:

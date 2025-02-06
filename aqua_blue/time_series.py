@@ -51,6 +51,6 @@ class TimeSeries:
 
     def __eq__(self, other) -> bool:
 
-        return np.all(self.times == other.times) and np.all(
+        return bool(np.all(self.times == other.times) and np.all(
             np.isclose(self.dependent_variable, other.dependent_variable)
-        )
+        ))

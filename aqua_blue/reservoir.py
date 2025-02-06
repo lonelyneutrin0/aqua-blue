@@ -8,6 +8,14 @@ from numpy.typing import NDArray
 from .time_series import TimeSeries
 
 
+MAX_CONDITION_NUMBER = 10
+
+
+class InstabilityWarning(Warning):
+
+    pass
+
+
 @dataclass
 class EchoStateNetwork:
 
@@ -18,9 +26,9 @@ class EchoStateNetwork:
     reservoir_dimensionality: int
     input_dimensionality: int
     w_in: Optional[NDArray] = None
-    regularization_parameter: Optional[float] = 1.0e-10
+    regularization_parameter: float = 1.0e-10
     generator: Optional[np.random.Generator] = None
-    activation_function: Optional[Callable[[NDArray], NDArray]] = np.tanh
+    activation_function: Callable[[NDArray], NDArray] = np.tanh
     w_out: NDArray = field(init=False)
     feedback_loop_guess: Union[float, NDArray] = field(init=False)
     timestep: float = field(init=False)
@@ -66,8 +74,13 @@ class EchoStateNetwork:
 
             # conditional number 
             cond_num = np.linalg.cond(x)
-            if cond_num > 10: 
-                warnings.warn(f"Condition Number {cond_num:.2E} is greater than 10, consider passing pinv = True in {self.__class__.__name__}.train() or increasing {self.__class__.__name__}.regularization_parameter")
+            if cond_num > MAX_CONDITION_NUMBER:
+                warnings.warn(
+                    f"Condition Number {cond_num:.2E} is greater than {MAX_CONDITION_NUMBER}. "
+                    f"consider passing pinv = True in {self.__class__.__name__}.train() "
+                    f"or increasing {self.__class__.__name__}.regularization_parameter",
+                    InstabilityWarning
+                )
 
             w_out_transpose = np.linalg.solve(
                 x,
@@ -86,7 +99,7 @@ class EchoStateNetwork:
         Usually, initial guess should be last known training value.
         """
 
-        if not hasattr(self, "w_out"):
+        if self.w_out is None or self.w_in is None:
             raise ValueError("need to train before predicting")
 
         # initialize predictions and reservoir states to populate later
