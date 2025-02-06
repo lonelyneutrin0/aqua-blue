@@ -1,6 +1,6 @@
-__version__ = "0.0.6"
-__author__ = "Jacob Jeffries"
-__author_email__ = "jacob.jeffries@chicagoclubteam.org"
+__version__ = "0.0.7"
+__authors__ = ["Jacob Jeffries", "Ameen Mahmood"]
+__author_emails__ = ["jacob.jeffries@chicagoclubteam.org", "ameen.mahmood@chicagoclubteam.org"]
 __url__ = "https://github.com/Chicago-Club-Management-Company/aqua-blue"
 
 from .reservoir import EchoStateNetwork as EchoStateNetwork
