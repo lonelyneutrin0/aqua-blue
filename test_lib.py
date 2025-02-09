@@ -56,3 +56,29 @@ def test_pinv_workaround():
     t = TimeSeries(dependent_variable=dependent_variables, times=np.arange(10))
     esn = EchoStateNetwork(reservoir_dimensionality=10, input_dimensionality=2, regularization_parameter=0.0)
     esn.train(t, pinv=True)
+
+
+def test_can_add_time_series():
+
+    t1 = TimeSeries(dependent_variable=np.cos(np.arange(10)), times=np.arange(10))
+    t2 = TimeSeries(dependent_variable=np.sin(np.arange(10)), times=np.arange(10))
+    t = t1 + t2
+
+    assert np.all(t.dependent_variable == t1.dependent_variable + t2.dependent_variable)
+    assert np.all(t.times == t1.times) and np.all(t1.times == t2.times)
+
+
+def test_time_series_addition_num_timesteps_error():
+
+    t1 = TimeSeries(dependent_variable=np.cos(np.arange(10)), times=np.arange(10))
+    t2 = TimeSeries(dependent_variable=np.sin(np.arange(10)), times=np.arange(11))
+    with pytest.raises(ValueError):
+        _ = t1 + t2
+
+
+def test_time_series_addition_spanning_error():
+
+    t1 = TimeSeries(dependent_variable=np.cos(np.arange(10)), times=np.arange(10))
+    t2 = TimeSeries(dependent_variable=np.sin(np.arange(10)), times=0.5 * np.arange(10))
+    with pytest.raises(ValueError):
+        _ = t1 + t2

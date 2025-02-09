@@ -54,3 +54,16 @@ class TimeSeries:
         return bool(np.all(self.times == other.times) and np.all(
             np.isclose(self.dependent_variable, other.dependent_variable)
         ))
+
+    def __add__(self, other):
+
+        if not len(self.times) == len(other.times):
+            raise ValueError("can only add TimeSeries instances that have the same number of timesteps")
+
+        if not np.all(self.times == other.times):
+            raise ValueError("can only add TimeSeries instances that span the same times")
+
+        return TimeSeries(
+            dependent_variable=self.dependent_variable + other.dependent_variable,
+            times=self.times
+        )

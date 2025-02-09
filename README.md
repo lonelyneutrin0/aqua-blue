@@ -1,6 +1,9 @@
 # aqua-blue
 Lightweight and basic reservoir computing library
 
+[![PyPI version fury.io](https://badge.fury.io/py/aqua-blue.svg)](https://pypi.python.org/pypi/aqua-blue/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/aqua-blue.svg)](https://pypi.python.org/pypi/aqua-blue/)
+
 ## 🌊 What is aqua-blue?
 
 `aqua-blue` is a lightweight `python` library for reservoir computing (specifically [echo state networks](https://en.wikipedia.org/wiki/Echo_state_network)) depending only on `numpy`. `aqua-blue`'s namesake comes from:
@@ -10,7 +13,7 @@ Lightweight and basic reservoir computing library
 
 ## 📥 Installation
 
-`aqua-blue` is on PyPI, and can therefore be installed with pip:
+`aqua-blue` is on PyPI, and can therefore be installed with `pip`:
 
 ```bash
 pip install aqua-blue
