@@ -82,3 +82,36 @@ def test_time_series_addition_spanning_error():
     t2 = TimeSeries(dependent_variable=np.sin(np.arange(10)), times=0.5 * np.arange(10))
     with pytest.raises(ValueError):
         _ = t1 + t2
+
+
+def test_timeseries_slicing():
+    ts = TimeSeries(
+        dependent_variable=np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),
+        times=np.array([0, 1, 2, 3])
+    )
+    ts_subset = ts[:2]
+    assert np.array_equal(ts_subset.dependent_variable, np.array([[1, 2], [3, 4]]))
+    assert np.array_equal(ts_subset.times, np.array([0, 1]))
+
+
+def test_timeseries_slice_assignment():
+    ts = TimeSeries(
+        dependent_variable=np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),
+        times=np.array([0, 1, 2, 3])
+    )
+    new_ts = TimeSeries(
+        dependent_variable=np.array([[9, 9], [8, 8]]),
+        times=np.array([0, 1])
+    )
+    ts[:2] = new_ts
+    assert np.array_equal(ts.dependent_variable, np.array([[9, 9], [8, 8], [5, 6], [7, 8]]))
+
+
+def test_timeseries_slice_deletion():
+    ts = TimeSeries(
+        dependent_variable=np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),
+        times=np.array([0, 1, 2, 3])
+    )
+    del ts[:2]
+    assert np.array_equal(ts.dependent_variable, np.array([[5, 6], [7, 8]]))
+    assert np.array_equal(ts.times, np.array([2, 3]))
