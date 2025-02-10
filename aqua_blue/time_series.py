@@ -1,16 +1,20 @@
 from typing import IO, Union
 from pathlib import Path
+
 from dataclasses import dataclass
 import numpy as np
+
 from numpy.typing import NDArray
 
 
 @dataclass
 class TimeSeries:
+
     dependent_variable: NDArray
     times: NDArray
 
     def __post_init__(self):
+
         timesteps = np.diff(self.times)
         if not np.isclose(np.std(timesteps), 0.0):
             raise ValueError("TimeSeries.times must be uniformly spaced")
@@ -28,11 +32,14 @@ class TimeSeries:
 
     @property
     def num_dims(self) -> int:
+
         return self.dependent_variable.shape[1]
 
     @classmethod
     def from_csv(cls, fp: Union[IO, str, Path], time_index: int = 0):
+
         data = np.loadtxt(fp, delimiter=",")
+
         return cls(
             dependent_variable=np.delete(data, obj=time_index, axis=1),
             times=data[:, time_index]
@@ -66,20 +73,38 @@ class TimeSeries:
         self.dependent_variable[key] = value.dependent_variable
         self.times[key] = value.times
 
-    def __delitem__(self, key):
-        """Allows deleting slices: del time_series[:n]"""
-        if isinstance(key, slice):
-            if key.stop is not None and key.stop > len(self.dependent_variable):
-                raise ValueError("Slice stop index out of range")
+    def __add__(self, other: 'TimeSeries') -> 'TimeSeries':
 
-            mask = np.ones(len(self.dependent_variable), dtype=bool)
-            mask[key] = False
-            self.dependent_variable = self.dependent_variable[mask]
-            self.times = self.times[mask]
+        if not isinstance(other, TimeSeries):
+            raise TypeError("Can only add TimeSeries instances.")
+        if not np.array_equal(self.times, other.times):
+            raise ValueError("TimeSeries instances must have identical times for addition.")
 
-        elif isinstance(key, int):
-            if key >= len(self.dependent_variable):
-                raise ValueError("Index out of range")
+        new_dependent = self.dependent_variable + other.dependent_variable
+        return TimeSeries(new_dependent, self.times)
 
-            self.dependent_variable = np.delete(self.dependent_variable, key, axis=0)
-            self.times = np.delete(self.times, key, axis=0)
+    def __sub__(self, other: 'TimeSeries') -> 'TimeSeries':
+
+        if not isinstance(other, TimeSeries):
+            raise TypeError("Can only subtract TimeSeries instances.")
+        if not np.array_equal(self.times, other.times):
+            raise ValueError("TimeSeries instances must have identical times for subtraction.")
+
+        new_dependent = self.dependent_variable - other.dependent_variable
+        return TimeSeries(new_dependent, self.times)
+
+    def __rshift__(self, other: 'TimeSeries') -> 'TimeSeries':
+
+        if not isinstance(other, TimeSeries):
+            raise TypeError("Can only concatenate TimeSeries instances.")
+        if self.times.size > 0 and other.times.size > 0:
+            if self.times[-1] >= other.times[0]:
+                raise ValueError("TimeSeries times must be non-overlapping and increasing for concatenation.")
+
+        new_times = np.concatenate((self.times, other.times))
+        new_dependent = np.concatenate((self.dependent_variable, other.dependent_variable))
+
+        return TimeSeries(new_dependent, new_times)
+
+    def __repr__(self):
+        return f"TimeSeries(dependent_variable={self.dependent_variable}, times={self.times})"
