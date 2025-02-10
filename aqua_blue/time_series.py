@@ -55,25 +55,27 @@ class TimeSeries:
         ))
 
     def __getitem__(self, key):
+
         """Enables slicing like time_series[:n]"""
+
         return TimeSeries(self.dependent_variable[key], self.times[key])
 
     def __setitem__(self, key, value):
+
         """Allows modifying slices: time_series[:n] = new_time_series"""
+
         if not isinstance(value, TimeSeries):
             raise TypeError("Value must be a TimeSeries object")
-
-        if isinstance(key, slice):
-            if key.stop is not None and key.stop > len(self.dependent_variable):
-                raise ValueError("Slice stop index out of range")
-        elif isinstance(key, int):
-            if key >= len(self.dependent_variable):
-                raise ValueError("Index out of range")
+        if isinstance(key, slice) and key.stop > len(self.dependent_variable):
+            raise ValueError("Slice stop index out of range")
+        if isinstance(key, int) and key >= len(self.dependent_variable):
+            raise ValueError("Index out of range")
 
         self.dependent_variable[key] = value.dependent_variable
         self.times[key] = value.times
 
     def __add__(self, other):
+
         if not len(self.times) == len(other.times):
             raise ValueError("can only add TimeSeries instances that have the same number of timesteps")
 
@@ -86,6 +88,7 @@ class TimeSeries:
         )
 
     def __sub__(self, other):
+
         if not len(self.times) == len(other.times):
             raise ValueError("can only subtract TimeSeries instances that have the same number of timesteps")
 
@@ -97,8 +100,8 @@ class TimeSeries:
             times=self.times
         )
 
-
     def __rshift__(self, other):
+
         if self.times[-1] >= other.times[0]:
             raise ValueError("can only concatenate TimeSeries instances with non-overlapping time values")
 

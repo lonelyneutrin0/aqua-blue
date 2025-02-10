@@ -11,7 +11,9 @@ license = "MIT"
 requires-python = ">=3.9"
 authors = [
     { name = "Jacob Jeffries", email = "jacob.jeffries@chicagoclubteam.org" },
-    { name = "Ameen Mahmood", email = "ameen.mahmood@chicagoclubteam.org" }
+    { name = "Ameen Mahmood", email = "ameen.mahmood@chicagoclubteam.org" },
+    { name = "Avik Thumati", email = "avik.thumati@chicagoclubteam.org" },
+    { name = "Samuel Josephs", email = "samuel.joseph@chicagoclubteam.org" }
 ]
 keywords = [
     "computing",

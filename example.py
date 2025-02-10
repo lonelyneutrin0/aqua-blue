@@ -1,5 +1,7 @@
+import warnings
+
 import numpy as np
-from aqua_blue import TimeSeries, EchoStateNetwork, utilities
+from aqua_blue import TimeSeries, EchoStateNetwork, utilities, InstabilityWarning
 
 
 def main():
@@ -20,8 +22,11 @@ def main():
     # generate echo state network with a relatively high reservoir dimensionality
     esn = EchoStateNetwork(reservoir_dimensionality=100, input_dimensionality=2)
 
-    # train esn on our time series
-    esn.train(time_series)
+    with warnings.catch_warnings():
+        # train esn on our time series
+        # ignore the instability warning since the resulting prediction error is fine
+        warnings.simplefilter("ignore", InstabilityWarning)
+        esn.train(time_series)
 
     # predict 1,000 steps into the future
     prediction = esn.predict(horizon=1_000)

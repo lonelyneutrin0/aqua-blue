@@ -8,9 +8,6 @@ from numpy.typing import NDArray
 from .time_series import TimeSeries
 
 
-MAX_CONDITION_NUMBER = 10
-
-
 class InstabilityWarning(Warning):
 
     pass
@@ -51,7 +48,7 @@ class EchoStateNetwork:
                 size=(self.reservoir_dimensionality, self.input_dimensionality)
             )
 
-    def train(self, input_time_series: TimeSeries, pinv: bool = False):
+    def train(self, input_time_series: TimeSeries, pinv: bool = False, max_condition_number: float = 10.0):
 
         """
         solve argmin_W ||Y - WX||^2 + λ||W||^2
@@ -74,18 +71,15 @@ class EchoStateNetwork:
 
             # conditional number 
             cond_num = np.linalg.cond(x)
-            if cond_num > MAX_CONDITION_NUMBER:
+            if cond_num > max_condition_number:
                 warnings.warn(
-                    f"Condition Number {cond_num:.2E} is greater than {MAX_CONDITION_NUMBER}. "
+                    f"Condition Number {cond_num:.2E} is greater than {max_condition_number}. "
                     f"consider passing pinv = True in {self.__class__.__name__}.train() "
                     f"or increasing {self.__class__.__name__}.regularization_parameter",
                     InstabilityWarning
                 )
 
-            w_out_transpose = np.linalg.solve(
-                x,
-                independent_variables.T @ dependent_variables
-            )
+            w_out_transpose = np.linalg.solve(x, independent_variables.T @ dependent_variables)
             
         self.w_out = w_out_transpose.T
         self.feedback_loop_guess = time_series_array[-1]
