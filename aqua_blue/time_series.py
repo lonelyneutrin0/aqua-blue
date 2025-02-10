@@ -73,38 +73,36 @@ class TimeSeries:
         self.dependent_variable[key] = value.dependent_variable
         self.times[key] = value.times
 
-    def __add__(self, other: 'TimeSeries') -> 'TimeSeries':
+    def __add__(self, other):
+        if not len(self.times) == len(other.times):
+            raise ValueError("can only add TimeSeries instances that have the same number of timesteps")
 
-        if not isinstance(other, TimeSeries):
-            raise TypeError("Can only add TimeSeries instances.")
-        if not np.array_equal(self.times, other.times):
-            raise ValueError("TimeSeries instances must have identical times for addition.")
+        if not np.all(self.times == other.times):
+            raise ValueError("can only add TimeSeries instances that span the same times")
 
-        new_dependent = self.dependent_variable + other.dependent_variable
-        return TimeSeries(new_dependent, self.times)
+        return TimeSeries(
+            dependent_variable=self.dependent_variable + other.dependent_variable,
+            times=self.times
+        )
 
-    def __sub__(self, other: 'TimeSeries') -> 'TimeSeries':
+    def __sub__(self, other):
+        if not len(self.times) == len(other.times):
+            raise ValueError("can only subtract TimeSeries instances that have the same number of timesteps")
 
-        if not isinstance(other, TimeSeries):
-            raise TypeError("Can only subtract TimeSeries instances.")
-        if not np.array_equal(self.times, other.times):
-            raise ValueError("TimeSeries instances must have identical times for subtraction.")
+        if not np.all(self.times == other.times):
+            raise ValueError("can only subtract TimeSeries instances that span the same times")
 
-        new_dependent = self.dependent_variable - other.dependent_variable
-        return TimeSeries(new_dependent, self.times)
+        return TimeSeries(
+            dependent_variable=self.dependent_variable - other.dependent_variable,
+            times=self.times
+        )
 
-    def __rshift__(self, other: 'TimeSeries') -> 'TimeSeries':
 
-        if not isinstance(other, TimeSeries):
-            raise TypeError("Can only concatenate TimeSeries instances.")
-        if self.times.size > 0 and other.times.size > 0:
-            if self.times[-1] >= other.times[0]:
-                raise ValueError("TimeSeries times must be non-overlapping and increasing for concatenation.")
+    def __rshift__(self, other):
+        if self.times[-1] >= other.times[0]:
+            raise ValueError("can only concatenate TimeSeries instances with non-overlapping time values")
 
-        new_times = np.concatenate((self.times, other.times))
-        new_dependent = np.concatenate((self.dependent_variable, other.dependent_variable))
-
-        return TimeSeries(new_dependent, new_times)
-
-    def __repr__(self):
-        return f"TimeSeries(dependent_variable={self.dependent_variable}, times={self.times})"
+        return TimeSeries(
+            dependent_variable=np.vstack((self.dependent_variable, other.dependent_variable)),
+            times=np.hstack((self.times, other.times))
+        )
