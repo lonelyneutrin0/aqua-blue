@@ -82,3 +82,51 @@ def test_time_series_addition_spanning_error():
     t2 = TimeSeries(dependent_variable=np.sin(np.arange(10)), times=0.5 * np.arange(10))
     with pytest.raises(ValueError):
         _ = t1 + t2
+
+
+def test_can_subtract_time_series():
+    t1 = TimeSeries(dependent_variable=np.array([[10, 10], [20, 20]]), times=np.array([0, 1]))
+    t2 = TimeSeries(dependent_variable=np.array([[5, 5], [8, 8]]), times=np.array([0, 1]))
+    t = t1 - t2
+
+    assert np.array_equal(t.dependent_variable, np.array([[5, 5], [12, 12]]))
+    assert np.array_equal(t.times, t1.times)
+
+def test_can_concatenate_time_series():
+    t1 = TimeSeries(dependent_variable=np.array([[1, 2], [3, 4]]), times=np.array([0, 1]))
+    t2 = TimeSeries(dependent_variable=np.array([[5, 6], [7, 8]]), times=np.array([2, 3]))
+    t = t1 >> t2
+
+    assert np.array_equal(t.dependent_variable, np.array([[1, 2], [3, 4], [5, 6], [7, 8]]))
+    assert np.array_equal(t.times, np.array([0, 1, 2, 3]))
+
+
+def test_time_series_concatenation_overlap_error():
+    t1 = TimeSeries(dependent_variable=np.array([[1, 2], [3, 4]]), times=np.array([0, 1]))
+    t2 = TimeSeries(dependent_variable=np.array([[5, 6], [7, 8]]), times=np.array([1, 2]))
+
+    with pytest.raises(ValueError):
+        _ = t1 >> t2
+
+def test_timeseries_slicing():
+    ts = TimeSeries(
+        dependent_variable=np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),
+        times=np.array([0, 1, 2, 3])
+    )
+    ts_subset = ts[:2]
+    assert np.array_equal(ts_subset.dependent_variable, np.array([[1, 2], [3, 4]]))
+    assert np.array_equal(ts_subset.times, np.array([0, 1]))
+    with pytest.raises(IndexError):
+        _ = ts[10]
+
+def test_timeseries_slice_assignment():
+    ts = TimeSeries(
+        dependent_variable=np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),
+        times=np.array([0, 1, 2, 3])
+    )
+    new_ts = TimeSeries(
+        dependent_variable=np.array([[9, 9], [8, 8]]),
+        times=np.array([0, 1])
+    )
+    ts[:2] = new_ts
+    assert np.array_equal(ts.dependent_variable, np.array([[9, 9], [8, 8], [5, 6], [7, 8]]))
