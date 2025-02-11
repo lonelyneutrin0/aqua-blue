@@ -90,8 +90,6 @@ jobs:
           path: dist/
 
   create-docs:
-    needs:
-      - build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -116,9 +114,28 @@ jobs:
           name: sphinx-docs
           path: docs/_build/html
 
+  deploy-docs:
+    needs:
+      - create-docs
+    runs-on: ubuntu-latest
+    permissions:
+      content: read
+
+    steps:
+      - name: Download docs artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sphinx-docs
+          path: html/
+      # deploy here
+      - name: Deploy documentation
+        run: ->
+          :
+
   pypi-publish:
     needs:
       - build
+      - create-docs
     name: upload release to PyPI
     runs-on: ubuntu-latest
 
