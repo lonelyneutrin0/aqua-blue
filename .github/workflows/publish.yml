@@ -109,8 +109,7 @@ jobs:
           pip install .[dev]
       - name: Build Sphinx documentation
         run: >-
-          cd docs
-          sphinx-build -b html . _build/html
+          cd docs; sphinx-build -b html . _build/html
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
