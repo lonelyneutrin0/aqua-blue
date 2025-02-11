@@ -1,3 +1,8 @@
+"""
+This module provides simple utilities for processing TimeSeries instances
+"""
+
+
 from dataclasses import dataclass, field
 
 from numpy.typing import NDArray
@@ -8,10 +13,27 @@ from .time_series import TimeSeries
 @dataclass
 class Normalizer:
 
+    """
+    Normalizer class to normalize a time series to have zero mean and unit variance
+    """
+
     means: NDArray = field(init=False)
     standard_deviations: NDArray = field(init=False)
 
     def normalize(self, time_series: TimeSeries) -> TimeSeries:
+
+        """
+        Normalize the given TimeSeries instance
+
+        Args:
+            time_series (TimeSeries): Time series to normalize
+
+        Returns:
+            TimeSeries: The normalized time series
+
+        Raises:
+            ValueError: If the normalizer has already been used
+        """
 
         if hasattr(self, "means") or hasattr(self, "standard_deviations"):
             raise ValueError("You can only use the Normalizer once. Create a new instance to normalize again")
@@ -29,6 +51,20 @@ class Normalizer:
         )
 
     def denormalize(self, time_series: TimeSeries) -> TimeSeries:
+
+        """
+        Denormalize the given TimeSeries instance. Means and standard deviations are grabbed
+        from a previous normalization
+
+        Args:
+            time_series (TimeSeries): Time series to denormalize
+
+        Returns:
+            TimeSeries: The denormalized time series
+
+        Raises:
+            ValueError: If the normalizer has not yet been used
+        """
 
         if not hasattr(self, "means") or not hasattr(self, "standard_deviations"):
             raise ValueError("You can only denormalize after normalizing a time series")

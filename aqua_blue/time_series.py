@@ -21,9 +21,24 @@ class TimeSeries:
         if np.isclose(np.mean(timesteps), 0.0):
             raise ValueError("TimeSeries.times must have a timestep greater than zero")
 
-    def save(self, file: IO, header="", delimiter=","):
+    def save(self, fp: Union[IO, str, Path], header: str = "", delimiter=","):
+
+        """
+        Method to save a time series
+
+        Args:
+            fp (Union[IO, str, Path]):
+                The file-like object, path name, or Path in which to save the TimeSeries instance
+
+            header (str):
+                An optional header. Defaults to the empty string
+
+            delimiter (str):
+                The delimiting character in the save file. Defaults to a comma
+
+        """
         np.savetxt(
-            file,
+            fp,
             np.vstack((self.times, self.dependent_variable.T)).T,
             delimiter=delimiter,
             header=header,
@@ -33,10 +48,31 @@ class TimeSeries:
     @property
     def num_dims(self) -> int:
 
+        """
+        The dimensionality of the time series
+
+        Returns:
+            int: The dimensionality of the time series
+        """
+
         return self.dependent_variable.shape[1]
 
     @classmethod
     def from_csv(cls, fp: Union[IO, str, Path], time_index: int = 0):
+
+        """
+        Method for loading in a TimeSeries instance from a comma-separated value (csv) file
+
+        Args:
+            fp (Union[IO, str, Path]):
+                The file-like object, path name, or Path in which to read
+
+            time_index (int):
+                The column index corresponding to the time column. Defaults to 0
+
+        Returns:
+            TimeSeries: A TimeSeries instance populated by data from the csv file
+        """
 
         data = np.loadtxt(fp, delimiter=",")
 
@@ -47,6 +83,14 @@ class TimeSeries:
 
     @property
     def timestep(self) -> float:
+
+        """
+        The physical timestep of the time series
+
+        Returns:
+            int: The physical timestep of the time series
+        """
+
         return self.times[1] - self.times[0]
 
     def __eq__(self, other) -> bool:
@@ -56,13 +100,9 @@ class TimeSeries:
 
     def __getitem__(self, key):
 
-        """Enables slicing like time_series[:n]"""
-
         return TimeSeries(self.dependent_variable[key], self.times[key])
 
     def __setitem__(self, key, value):
-
-        """Allows modifying slices: time_series[:n] = new_time_series"""
 
         if not isinstance(value, TimeSeries):
             raise TypeError("Value must be a TimeSeries object")
