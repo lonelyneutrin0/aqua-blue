@@ -119,7 +119,7 @@ jobs:
       - create-docs
     runs-on: ubuntu-latest
     permissions:
-      content: read
+      contents: read
 
     steps:
       - name: Download docs artifact
