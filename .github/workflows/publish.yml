@@ -128,7 +128,6 @@ jobs:
           name: sphinx-docs
           path: html/
 
-      # deploy here
       - name: Deploy documentation
         run: ->
           :
