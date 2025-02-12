@@ -162,7 +162,6 @@ jobs:
       contents: read
 
     steps:
-      - shell: bash
       - uses: actions/checkout@v4
         with:
           persist-credentials: False
