@@ -153,3 +153,28 @@ jobs:
           path: dist/
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
+
+  notify-discord:
+    needs:
+      - pypi-publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: False
+        env:
+          KEY: ${{ secrets.DISCORD_BOT_API_KEY }}
+          CHANNEL: ${{ secrets.DISCORD_RELEASES_CHANNEL_ID }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - name: Install dependencies
+        run: >-
+          pip install .[dev]
+      - name: Notify channel
+        run: >-
+          python notifications/bot.py ${KEY} ${CHANNEL}
