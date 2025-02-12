@@ -165,9 +165,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: False
-        env:
-          KEY: ${{ secrets.DISCORD_BOT_API_KEY }}
-          CHANNEL: ${{ secrets.DISCORD_RELEASES_CHANNEL_ID }}
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -176,5 +173,8 @@ jobs:
         run: >-
           pip install .[dev]
       - name: Notify channel
+        env:
+          KEY: ${{ secrets.DISCORD_BOT_API_KEY }}
+          CHANNEL: ${{ secrets.DISCORD_RELEASES_CHANNEL_ID }}
         run: >-
           python notifications/bot.py $KEY $CHANNEL
