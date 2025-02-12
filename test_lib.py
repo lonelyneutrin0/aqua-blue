@@ -92,12 +92,14 @@ def test_can_subtract_time_series():
     assert np.all(t.dependent_variable == (t1.dependent_variable - t2.dependent_variable))
     assert np.all(t.times == t1.times) and np.all(t1.times == t2.times)
 
+
 def test_can_concatenate_time_series():
     t1 = TimeSeries(dependent_variable=np.array([[1, 2], [3, 4]]), times=np.array([0, 1]))
     t2 = TimeSeries(dependent_variable=np.array([[5, 6], [7, 8]]), times=np.array([2, 3]))
     t = t1 >> t2
 
-    assert np.array_equal(t.dependent_variable, np.array([[1, 2], [3, 4], [5, 6], [7, 8]]))
+    assert np.all(t.dependent_variable == np.concatenate((t1.dependent_variable, t2.dependent_variable)))
+    assert np.all(t.times == np.concatenate((t1.times, t2.times)))
 
 
 def test_time_series_concatenation_overlap_error():
@@ -107,17 +109,19 @@ def test_time_series_concatenation_overlap_error():
     with pytest.raises(ValueError):
         _ = t1 >> t2
 
+
 def test_timeseries_slicing():
     ts = TimeSeries(
         dependent_variable=np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),
         times=np.array([0, 1, 2, 3])
     )
     ts_subset = ts[:2]
-    
     assert np.all(ts_subset.dependent_variable == ts.dependent_variable[:2])
     assert np.all(ts_subset.times == ts.times[:2])
     with pytest.raises(IndexError):
         _ = ts[10]
+
+
 def test_timeseries_slice_assignment():
     ts = TimeSeries(
         dependent_variable=np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),

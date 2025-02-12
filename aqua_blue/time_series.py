@@ -148,3 +148,4 @@ class TimeSeries:
         return TimeSeries(
             dependent_variable=np.vstack((self.dependent_variable, other.dependent_variable)),
             times=np.hstack((self.times, other.times))
+        )
