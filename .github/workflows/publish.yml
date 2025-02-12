@@ -162,6 +162,7 @@ jobs:
       contents: read
 
     steps:
+      - shell: bash
       - uses: actions/checkout@v4
         with:
           persist-credentials: False
@@ -177,4 +178,4 @@ jobs:
           pip install .[dev]
       - name: Notify channel
         run: >-
-          python notifications/bot.py ${KEY} ${CHANNEL}
+          python notifications/bot.py $KEY $CHANNEL
