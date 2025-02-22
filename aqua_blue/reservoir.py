@@ -8,7 +8,6 @@ from typing import Optional, Callable, Union
 import warnings
 
 import numpy as np
-#from numpy.typing import NDArray
 
 from .time_series import TimeSeries
 

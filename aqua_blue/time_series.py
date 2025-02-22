@@ -1,10 +1,18 @@
 from typing import IO, Union
 from pathlib import Path
+import warnings
 
 from dataclasses import dataclass
 import numpy as np
 
 from numpy.typing import NDArray
+
+
+class ShapeChangedWarning(Warning):
+
+    """
+    warn the user that TimeSeries.__post_init__ changed the shape of the dependent variable
+    """
 
 
 @dataclass
@@ -20,6 +28,14 @@ class TimeSeries:
             raise ValueError("TimeSeries.times must be uniformly spaced")
         if np.isclose(np.mean(timesteps), 0.0):
             raise ValueError("TimeSeries.times must have a timestep greater than zero")
+
+        if len(self.dependent_variable.shape) == 1:
+            num_steps = len(self.dependent_variable)
+            self.dependent_variable = self.dependent_variable.reshape(num_steps, 1)
+            warnings.warn(
+                f"TimeSeries.dependent_variable should have shape (number of steps, dimensionality). "
+                f"The shape has been changed from {(num_steps,)} to {self.dependent_variable.shape}"
+            )
 
     def save(self, fp: Union[IO, str, Path], header: str = "", delimiter=","):
 

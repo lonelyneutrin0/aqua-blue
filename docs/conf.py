@@ -8,12 +8,13 @@
 
 import os
 import sys
+from datetime import datetime
 from aqua_blue import __version__, __authors__
 
 sys.path.insert(0, os.path.abspath(".."))
 
-project = 'aqua-blue'
-copyright = '2025, Chicago Club Management Company'
+project = "aqua-blue"
+copyright = f"{datetime.now().year}, Chicago Club Management Company"
 author = ", ".join(__authors__)
 release = __version__
 version = __version__
