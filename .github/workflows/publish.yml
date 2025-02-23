@@ -158,6 +158,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@76f52bc884231f62b9a034ebfe128415bbaabdfc
 
   notify-discord:
+    # needs: pypi-publish
     runs-on: ubuntu-latest
     steps:
       - name: Send webhook payload to Discord
@@ -171,7 +172,7 @@ jobs:
                          "title": "Push Notification",
                          "description": "Repository: '${{ github.repository }}' at commit: '${{ github.sha }}'",
                          "color": 3447003,
-                         "url": "https://github.com/${{ github.repository }}/commit/${{ github.sha }}",
+                         "url": "https://github.com/${{ github.repository }}/commit/${{ github.sha }}"
                        }
                      ]
                    }'
