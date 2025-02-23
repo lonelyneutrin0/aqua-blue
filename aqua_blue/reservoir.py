@@ -66,7 +66,13 @@ class EchoStateNetwork:
                 size=(self.reservoir_dimensionality, self.input_dimensionality)
             )
 
-    def train(self, input_time_series: TimeSeries, pinv: bool = False, max_condition_number: float = 10.0):
+    def train(
+        self,
+        input_time_series: TimeSeries,
+        pinv: bool = False,
+        max_condition_number: float = 10.0,
+        warmup: int = 0
+    ):
 
         """
         Training step, solving argmin_W ||Y - WX||^2 + λ||W||^2
@@ -81,9 +87,13 @@ class EchoStateNetwork:
             max_condition_number (float):
                 Maximum condition number of the training data.
                 A larger condition number will induce an InstabilityWarning
-        """
 
-        # assert that all timesteps are constant
+            warmup (int):
+                Warmup, aka number of initial steps to ignore in training
+        """
+        if warmup >= len(input_time_series.times):
+            raise ValueError(f"warmup must be smaller than number of timesteps ({len(input_time_series.times)})")
+
         self.timestep = input_time_series.timestep
         self.final_time = input_time_series.times[-1]
 
@@ -91,12 +101,15 @@ class EchoStateNetwork:
         independent_variables = self.activation_function(self.w_in @ time_series_array[:-1, :].T).T
         dependent_variables = time_series_array[1:]
 
-        regularization = self.regularization_parameter * np.eye(independent_variables.shape[1])
+        if warmup > 0:
+            independent_variables = independent_variables[warmup:]
+            dependent_variables = dependent_variables[warmup:]
 
         if pinv:
             w_out_transpose = np.linalg.pinv(independent_variables) @ dependent_variables
         else:
-            x = independent_variables.T @ independent_variables + regularization
+            x = independent_variables.T @ independent_variables
+            x = x + self.regularization_parameter * np.eye(independent_variables.shape[1])
 
             # conditional number 
             cond_num = np.linalg.cond(x)
@@ -125,7 +138,7 @@ class EchoStateNetwork:
             TimeSeries: The resulting predicted time series
         """
 
-        if self.w_out is None or self.w_in is None:
+        if self.w_out is None:
             raise ValueError("need to train before predicting")
 
         # initialize predictions and reservoir states to populate later
