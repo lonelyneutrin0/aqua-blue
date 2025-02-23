@@ -138,7 +138,7 @@ class EchoStateNetwork:
             TimeSeries: The resulting predicted time series
         """
 
-        if self.w_out is None:
+        if self.w_out is None or self.w_in is None:
             raise ValueError("need to train before predicting")
 
         # initialize predictions and reservoir states to populate later
