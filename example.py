@@ -19,7 +19,10 @@ def main():
 
     # make model
     model = aqua_blue.models.Model(
-        reservoir=aqua_blue.reservoirs.DynamicalReservoir(reservoir_dimensionality=100, input_dimensionality=2),
+        reservoir=aqua_blue.reservoirs.DynamicalReservoir(
+            reservoir_dimensionality=100,
+            input_dimensionality=2
+        ),
         readout=aqua_blue.readouts.LinearReadout()
     )
     model.train(time_series)

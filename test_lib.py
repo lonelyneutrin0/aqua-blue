@@ -4,7 +4,7 @@ from copy import deepcopy
 import pytest
 import numpy as np
 
-from aqua_blue import EchoStateNetwork, TimeSeries, utilities, InstabilityWarning, ShapeChangedWarning
+from aqua_blue import time_series, utilities, reservoirs, readouts, models
 
 
 @pytest.fixture
@@ -13,7 +13,7 @@ def cosine_sine_series():
     times = np.arange(10)
     dependent_variables = np.vstack((np.cos(times), np.sin(times))).T
 
-    return TimeSeries(
+    return time_series.TimeSeries(
         dependent_variable=dependent_variables,
         times=times
     )
@@ -22,22 +22,22 @@ def cosine_sine_series():
 def test_non_uniform_timestep_error():
 
     with pytest.raises(ValueError):
-        _ = TimeSeries(dependent_variable=np.ones(10), times=np.logspace(0, 1, 10))
+        _ = time_series.TimeSeries(dependent_variable=np.ones(10), times=np.logspace(0, 1, 10))
 
 
 def test_zero_timestep_error():
 
     with pytest.raises(ValueError):
-        _ = TimeSeries(dependent_variable=np.ones(10), times=np.zeros(10))
+        _ = time_series.TimeSeries(dependent_variable=np.ones(10), times=np.zeros(10))
 
 
 def test_can_save_and_load_time_series():
 
-    t_original = TimeSeries(dependent_variable=np.ones(shape=(10, 2)), times=np.arange(10))
+    t_original = time_series.TimeSeries(dependent_variable=np.ones(shape=(10, 2)), times=np.arange(10))
     with BytesIO() as buffer:
         t_original.save(buffer)
         buffer.seek(0)
-        t_loaded = TimeSeries.from_csv(buffer)
+        t_loaded = time_series.TimeSeries.from_csv(buffer)
 
     assert t_original == t_loaded
 
@@ -51,17 +51,13 @@ def test_normalizer_inversion(cosine_sine_series):
     assert cosine_sine_series == t_denormalized
 
 
-def test_condition_number_warning(cosine_sine_series):
-
-    esn = EchoStateNetwork(reservoir_dimensionality=10, input_dimensionality=2, regularization_parameter=0.0)
-    with pytest.warns(InstabilityWarning):
-        esn.train(cosine_sine_series)
-
-
 def test_pinv_workaround(cosine_sine_series):
 
-    esn = EchoStateNetwork(reservoir_dimensionality=10, input_dimensionality=2, regularization_parameter=0.0)
-    esn.train(cosine_sine_series, pinv=True)
+    model = models.Model(
+        reservoir=reservoirs.DynamicalReservoir(input_dimensionality=2, reservoir_dimensionality=10),
+        readout=readouts.LinearReadout()
+    )
+    model.train(cosine_sine_series)
 
 
 def test_can_add_time_series(cosine_sine_series):
@@ -130,11 +126,11 @@ def test_timeseries_slicing(cosine_sine_series):
 
 
 def test_timeseries_slice_assignment():
-    ts = TimeSeries(
+    ts = time_series.TimeSeries(
         dependent_variable=np.array([[1, 2], [3, 4], [5, 6], [7, 8]]),
         times=np.array([0, 1, 2, 3])
     )
-    new_ts = TimeSeries(
+    new_ts = time_series.TimeSeries(
         dependent_variable=np.array([[9, 9], [8, 8]]),
         times=np.array([0, 1])
     )

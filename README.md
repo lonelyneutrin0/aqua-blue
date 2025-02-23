@@ -23,25 +23,34 @@ pip install aqua-blue
 
 ```py
 import numpy as np
-from aqua_blue import TimeSeries, EchoStateNetwork
+import aqua_blue
 
 # generate arbitrary two-dimensional time series
 # y_1(t) = cos(t), y_2(t) = sin(t)
 # resulting dependent variable has shape (number of timesteps, 2)
 t = np.linspace(0, 4.0 * np.pi, 10_000)
-y = np.vstack((np.cos(t), np.sin(t))).T
+y = np.vstack((2.0 * np.cos(t) + 1, 5.0 * np.sin(t) - 1)).T
 
 # create time series object to feed into echo state network
-time_series = TimeSeries(dependent_variable=y, times=t)
+time_series = aqua_blue.time_series.TimeSeries(dependent_variable=y, times=t)
 
-# generate echo state network with a relatively high reservoir dimensionality
-esn = EchoStateNetwork(reservoir_dimensionality=100, input_dimensionality=2)
+# normalize
+normalizer = aqua_blue.utilities.Normalizer()
+time_series = normalizer.normalize(time_series)
 
-# train esn on our time series
-esn.train(time_series)
+# make model and train
+model = aqua_blue.models.Model(
+    reservoir=aqua_blue.reservoirs.DynamicalReservoir(
+        reservoir_dimensionality=100,
+        input_dimensionality=2
+    ),
+    readout=aqua_blue.readouts.LinearReadout()
+)
+model.train(time_series)
 
-# predict 1,000 steps into the future
-prediction = esn.predict(horizon=1_000)
+# predict and denormalize
+prediction = model.predict(horizon=1_000)
+prediction = normalizer.denormalize(prediction)
 ```
 
 ## 📃 License
