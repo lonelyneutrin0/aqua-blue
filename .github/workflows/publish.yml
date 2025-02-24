@@ -122,7 +122,9 @@ jobs:
       - create-docs
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
+      pages: write
+      id-token: write
 
     steps:
       - name: Download docs artifact
@@ -131,10 +133,11 @@ jobs:
           name: pdoc-docs
           path: _build/
 
-      # deploy here
+      # deploy here, to github pages for now
       - name: Deploy documentation
-        run: >-
-          :
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: _build/aqua_blue
 
   pypi-publish:
     needs:
