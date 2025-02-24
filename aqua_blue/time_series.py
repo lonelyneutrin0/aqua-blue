@@ -9,8 +9,6 @@ import warnings
 from dataclasses import dataclass
 import numpy as np
 
-from numpy.typing import NDArray
-
 
 class ShapeChangedWarning(Warning):
 
@@ -22,8 +20,12 @@ class ShapeChangedWarning(Warning):
 @dataclass
 class TimeSeries:
 
-    dependent_variable: NDArray
-    times: NDArray
+    """
+    TimeSeries class defining a time series
+    """
+
+    dependent_variable: np.typing.NDArray[np.floating]
+    times: np.typing.NDArray[np.floating]
 
     def __post_init__(self):
 

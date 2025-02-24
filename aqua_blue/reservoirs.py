@@ -5,9 +5,17 @@ Module defining reservoirs
 
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from typing import Callable, Optional
+from typing import Optional, Callable, TYPE_CHECKING
 
 import numpy as np
+
+
+#: Type alias for activation function. Callable taking in a numpy array, and returning a numpy array of the same shape
+ActivationFunction = Callable[[np.typing.NDArray[np.floating]], np.typing.NDArray[np.floating]]
+
+# pdoc needs it to be a string, but type checker needs it to be a true alias, so replace if not type checking
+if not TYPE_CHECKING:
+    ActivationFunction = "ActivationFunction"
 
 
 @dataclass
@@ -24,7 +32,7 @@ class Reservoir(ABC):
     """dimensionality of the reservoir state, equivalently the reservoir size"""
 
     @abstractmethod
-    def input_to_reservoir(self, input_state: np.typing.NDArray) -> np.typing.NDArray:
+    def input_to_reservoir(self, input_state: np.typing.NDArray[np.floating]) -> np.typing.NDArray[np.floating]:
 
         """
         Map from input state to reservoir state
@@ -51,13 +59,13 @@ class DynamicalReservoir(Reservoir):
     will be set to np.random.default_rng(seed=0) if not specified
     """
 
-    w_in: Optional[np.typing.NDArray] = None
+    w_in: Optional[np.typing.NDArray[np.floating]] = None
     """
     input linear mapping. must be shape (self.reservoir_dimensionality, self.input_dimensionality)
     if not defined at initialization, will be auto generated
     """
 
-    activation_function: Callable[[np.typing.NDArray], np.typing.NDArray] = np.tanh
+    activation_function: ActivationFunction = np.tanh
     """
     activation function f. defaults to np.tanh
     """
@@ -74,7 +82,7 @@ class DynamicalReservoir(Reservoir):
                 size=(self.reservoir_dimensionality, self.input_dimensionality)
             )
 
-    def input_to_reservoir(self, input_state: np.typing.NDArray) -> np.typing.NDArray:
+    def input_to_reservoir(self, input_state: np.typing.NDArray[np.floating]) -> np.typing.NDArray[np.floating]:
 
         """
         Map from input state to reservoir state via y_t = f(w_in @ x_t)
@@ -83,4 +91,5 @@ class DynamicalReservoir(Reservoir):
             input_state: input state to map to reservoir state
         """
 
+        assert isinstance(self.w_in, np.ndarray)
         return self.activation_function(self.w_in @ input_state)

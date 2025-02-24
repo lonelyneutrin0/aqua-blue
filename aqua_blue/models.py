@@ -30,7 +30,7 @@ class Model:
     timestep: float = field(init=False)
     """timestep read during training. will be set at training"""
 
-    initial_guess: np.typing.NDArray = field(init=False)
+    initial_guess: np.typing.NDArray[np.floating] = field(init=False)
     """initial guess read during training. will be set at training"""
 
     def train(
