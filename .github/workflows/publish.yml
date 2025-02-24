@@ -140,6 +140,7 @@ jobs:
       - name: Deploy documentation
         uses: JamesIves/github-pages-deploy-action@v4
         with:
+          branch: gh-pages
           folder: _build/aqua_blue
           clean: true
 
