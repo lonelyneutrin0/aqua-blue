@@ -31,8 +31,8 @@ class Reservoir(ABC):
     reservoir_dimensionality: int
     """dimensionality of the reservoir state, equivalently the reservoir size"""
 
-    res_state: np.typing.NDArray = field(init=False)
-    """internal reservoir state, should not be changed nor initialized"""
+    res_state: np.typing.NDArray[np.floating] = field(init=False)
+    """reservoir state, necessary property when performing training loop"""
 
     @abstractmethod
     def update_reservoir(self, input_state: np.typing.NDArray[np.floating]) -> np.typing.NDArray[np.floating]:
