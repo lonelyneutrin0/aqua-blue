@@ -43,6 +43,27 @@ el.replaceWith(d);
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="aqua_blue.time_series.is_float"><code class="name flex">
+<span>def <span class="ident">is_float</span></span>(<span>date_string)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_float(date_string):
+    # Function to determine if a string can be converted to a datetime object
+    try: 
+        float(date_string)
+        return True
+    except:
+        return False</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
@@ -72,7 +93,7 @@ el.replaceWith(d);
 </dd>
 <dt id="aqua_blue.time_series.TimeSeries"><code class="flex name class">
 <span>class <span class="ident">TimeSeries</span></span>
-<span>(</span><span>dependent_variable: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]],<br>times: List[float])</span>
+<span>(</span><span>dependent_variable: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]],<br>times: List[~DatetimeLike])</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -80,24 +101,30 @@ el.replaceWith(d);
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@dataclass
-class TimeSeries:
+class TimeSeries(Generic[DatetimeLike]):
 
     &#34;&#34;&#34;
     TimeSeries class defining a time series
     &#34;&#34;&#34;
 
     dependent_variable: np.typing.NDArray[np.floating]
-    times: List[float]
+    times: List[DatetimeLike]
 
     def __post_init__(self):
-
+        
+        if isinstance(self.times, np.ndarray) and not isinstance(self.times[0], float, int):
+            raise ValueError(&#34;Datetime NumPy arrays are not supported. times must be List[int] | List[float] | List[datetime]&#34;)
         if isinstance(self.times, np.ndarray):
-            self.times = self.times.tolist()
-
+            self.times = self.times.astype(float).tolist()
+        
         timesteps = [t2 - t1 for t1, t2 in pairwise(self.times)]
 
+        if isinstance(timesteps[0], timedelta):
+            timesteps = [dt.total_seconds() for dt in timesteps]
+        
         if not np.isclose(np.std(timesteps), 0.0):
             raise ValueError(&#34;TimeSeries.times must be uniformly spaced&#34;)
+        
         if np.isclose(np.mean(timesteps), 0.0):
             raise ValueError(&#34;TimeSeries.times must have a timestep greater than zero&#34;)
 
@@ -108,37 +135,48 @@ class TimeSeries:
                 f&#34;TimeSeries.dependent_variable should have shape (number of steps, dimensionality). &#34;
                 f&#34;The shape has been changed from {(num_steps,)} to {self.dependent_variable.shape}&#34;
             )
-
-    def save(self, fp: Union[IO, str, Path], header: str = &#34;&#34;, delimiter=&#34;,&#34;):
-
+    
+    def save(self, fp: Union[IO, str, Path], header: str = &#34;&#34;, delimiter: str =&#34;,&#34;):
+        
         &#34;&#34;&#34;
         Method to save a time series
-
+        
         Args:
             fp (Union[IO, str, Path]):
                 The file-like object, path name, or Path in which to save the TimeSeries instance
-
+            
             header (str):
                 An optional header. Defaults to the empty string
-
+            
             delimiter (str):
                 The delimiting character in the save file. Defaults to a comma
-
+        
         &#34;&#34;&#34;
-        np.savetxt(
-            fp,
-            np.vstack((self.times, self.dependent_variable.T)).T,
-            delimiter=delimiter,
-            header=header,
-            comments=&#34;&#34;
-        )
-
+        if not isinstance(self.times[0], float, int):
+            dim_dependent = len(self.dependent_variable[0])
+            with open(fp, &#34;w&#34;) as f:
+                if(header != &#34;&#34;):
+                    f.write(f&#39;{header}\n&#39;)
+                for t in range(len(self.times)):
+                    out_string = f&#39;{self.times[t]}{delimiter}&#39;
+                    for i in range(dim_dependent):      
+                        out_string += f&#39;{self.dependent_variable[t][i]:.18e}{delimiter}&#39;
+                    f.write(f&#39;{out_string}\n&#39;)
+        else:
+            np.savetxt(
+                fp,
+                np.vstack((self.times, self.dependent_variable.T)).T,
+                delimiter=delimiter,
+                header=header,
+                comments=&#34;&#34;
+            )
+        
     @property
     def num_dims(self) -&gt; int:
 
         &#34;&#34;&#34;
         The dimensionality of the time series
-
+        
         Returns:
             int: The dimensionality of the time series
         &#34;&#34;&#34;
@@ -146,7 +184,7 @@ class TimeSeries:
         return self.dependent_variable.shape[1]
 
     @classmethod
-    def from_csv(cls, fp: Union[IO, str, Path], time_index: int = 0):
+    def from_csv(cls, fp: Union[IO, str, Path], time_index: int = 0, skip_header=False):
 
         &#34;&#34;&#34;
         Method for loading in a TimeSeries instance from a comma-separated value (csv) file
@@ -157,29 +195,53 @@ class TimeSeries:
 
             time_index (int):
                 The column index corresponding to the time column. Defaults to 0
-
+            
+            skip_header (bool):
+                Whether to skip the first row of the csv file or not. Defaults to false
+        
         Returns:
             TimeSeries: A TimeSeries instance populated by data from the csv file
         &#34;&#34;&#34;
+        
+        with open(fp, &#34;r&#34;) as f: 
+            output = []
+            lines = csv.reader(f)
+            for idx, line in enumerate(lines):
+                if(idx == 0 and skip_header):
+                    continue 
+                if(line[-1] == &#34;&#34;):
+                    line.pop()
+                output.append(line)
+            
+            if(is_float(output[1][time_index])):
+                for i, line in enumerate(output):
+                    for j, term in enumerate(line):
+                        output[i][j] = float(term)
+            
+            else:
+                for i, line in enumerate(output):
+                    for j, term in enumerate(line):
+                        if(j == time_index):
+                            output[i][j] = parser.parse(term)
+                            continue
+                        output[i][j] = float(term)
 
-        data = np.loadtxt(fp, delimiter=&#34;,&#34;)
-        times = data[:, time_index].tolist()
-
-        return cls(
-            dependent_variable=np.delete(data, obj=time_index, axis=1),
-            times=times
-        )
-
+            return cls(
+                times=[row[time_index] for row in output],
+                dependent_variable=np.array([row[:(time_index)] + row[(time_index+1):] for row in output])
+            )
+    
+    
     @property
-    def timestep(self) -&gt; float:
-
+    def timestep(self) -&gt; Union[float, timedelta]:
+        
         &#34;&#34;&#34;
         The physical timestep of the time series
 
         Returns:
             int: The physical timestep of the time series
         &#34;&#34;&#34;
-
+        
         return self.times[1] - self.times[0]
 
     def __eq__(self, other) -&gt; bool:
@@ -245,13 +307,17 @@ class TimeSeries:
         return len(self.times)</code></pre>
 </details>
 <div class="desc"><p>TimeSeries class defining a time series</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>typing.Generic</li>
+</ul>
 <h3>Class variables</h3>
 <dl>
 <dt id="aqua_blue.time_series.TimeSeries.dependent_variable"><code class="name">var <span class="ident">dependent_variable</span> : numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="aqua_blue.time_series.TimeSeries.times"><code class="name">var <span class="ident">times</span> : List[float]</code></dt>
+<dt id="aqua_blue.time_series.TimeSeries.times"><code class="name">var <span class="ident">times</span> : List[~DatetimeLike]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -259,7 +325,7 @@ class TimeSeries:
 <h3>Static methods</h3>
 <dl>
 <dt id="aqua_blue.time_series.TimeSeries.from_csv"><code class="name flex">
-<span>def <span class="ident">from_csv</span></span>(<span>fp: <class 'IO'> | str | pathlib.Path, time_index: int = 0)</span>
+<span>def <span class="ident">from_csv</span></span>(<span>fp: <class 'IO'> | str | pathlib.Path, time_index: int = 0, skip_header=False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Method for loading in a TimeSeries instance from a comma-separated value (csv) file</p>
@@ -268,6 +334,8 @@ class TimeSeries:
 The file-like object, path name, or Path in which to read</p>
 <p>time_index (int):
 The column index corresponding to the time column. Defaults to 0</p>
+<p>skip_header (bool):
+Whether to skip the first row of the csv file or not. Defaults to false</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code><a title="aqua_blue.time_series.TimeSeries" href="#aqua_blue.time_series.TimeSeries">TimeSeries</a></code></dt>
@@ -288,7 +356,7 @@ def num_dims(self) -&gt; int:
 
     &#34;&#34;&#34;
     The dimensionality of the time series
-
+    
     Returns:
         int: The dimensionality of the time series
     &#34;&#34;&#34;
@@ -302,22 +370,22 @@ def num_dims(self) -&gt; int:
 <dd>The dimensionality of the time series</dd>
 </dl></div>
 </dd>
-<dt id="aqua_blue.time_series.TimeSeries.timestep"><code class="name">prop <span class="ident">timestep</span> : float</code></dt>
+<dt id="aqua_blue.time_series.TimeSeries.timestep"><code class="name">prop <span class="ident">timestep</span> : float | datetime.timedelta</code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def timestep(self) -&gt; float:
-
+def timestep(self) -&gt; Union[float, timedelta]:
+    
     &#34;&#34;&#34;
     The physical timestep of the time series
 
     Returns:
         int: The physical timestep of the time series
     &#34;&#34;&#34;
-
+    
     return self.times[1] - self.times[0]</code></pre>
 </details>
 <div class="desc"><p>The physical timestep of the time series</p>
@@ -331,36 +399,47 @@ def timestep(self) -&gt; float:
 <h3>Methods</h3>
 <dl>
 <dt id="aqua_blue.time_series.TimeSeries.save"><code class="name flex">
-<span>def <span class="ident">save</span></span>(<span>self, fp: <class 'IO'> | str | pathlib.Path, header: str = '', delimiter=',')</span>
+<span>def <span class="ident">save</span></span>(<span>self,<br>fp: <class 'IO'> | str | pathlib.Path,<br>header: str = '',<br>delimiter: str = ',')</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def save(self, fp: Union[IO, str, Path], header: str = &#34;&#34;, delimiter=&#34;,&#34;):
-
+<pre><code class="python">def save(self, fp: Union[IO, str, Path], header: str = &#34;&#34;, delimiter: str =&#34;,&#34;):
+    
     &#34;&#34;&#34;
     Method to save a time series
-
+    
     Args:
         fp (Union[IO, str, Path]):
             The file-like object, path name, or Path in which to save the TimeSeries instance
-
+        
         header (str):
             An optional header. Defaults to the empty string
-
+        
         delimiter (str):
             The delimiting character in the save file. Defaults to a comma
-
+    
     &#34;&#34;&#34;
-    np.savetxt(
-        fp,
-        np.vstack((self.times, self.dependent_variable.T)).T,
-        delimiter=delimiter,
-        header=header,
-        comments=&#34;&#34;
-    )</code></pre>
+    if not isinstance(self.times[0], float, int):
+        dim_dependent = len(self.dependent_variable[0])
+        with open(fp, &#34;w&#34;) as f:
+            if(header != &#34;&#34;):
+                f.write(f&#39;{header}\n&#39;)
+            for t in range(len(self.times)):
+                out_string = f&#39;{self.times[t]}{delimiter}&#39;
+                for i in range(dim_dependent):      
+                    out_string += f&#39;{self.dependent_variable[t][i]:.18e}{delimiter}&#39;
+                f.write(f&#39;{out_string}\n&#39;)
+    else:
+        np.savetxt(
+            fp,
+            np.vstack((self.times, self.dependent_variable.T)).T,
+            delimiter=delimiter,
+            header=header,
+            comments=&#34;&#34;
+        )</code></pre>
 </details>
 <div class="desc"><p>Method to save a time series</p>
 <h2 id="args">Args</h2>
@@ -384,6 +463,11 @@ The delimiting character in the save file. Defaults to a comma</p></div>
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="aqua_blue" href="index.html">aqua_blue</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="aqua_blue.time_series.is_float" href="#aqua_blue.time_series.is_float">is_float</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
