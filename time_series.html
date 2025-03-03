@@ -112,7 +112,7 @@ class TimeSeries(Generic[DatetimeLike]):
 
     def __post_init__(self):
         
-        if isinstance(self.times, np.ndarray) and not isinstance(self.times[0], float, int):
+        if isinstance(self.times, np.ndarray) and not isinstance(self.times[0], (float, int)):
             raise ValueError(&#34;Datetime NumPy arrays are not supported. times must be List[int] | List[float] | List[datetime]&#34;)
         if isinstance(self.times, np.ndarray):
             self.times = self.times.astype(float).tolist()
@@ -152,7 +152,7 @@ class TimeSeries(Generic[DatetimeLike]):
                 The delimiting character in the save file. Defaults to a comma
         
         &#34;&#34;&#34;
-        if not isinstance(self.times[0], float, int):
+        if not isinstance(self.times[0], (float, int)):
             dim_dependent = len(self.dependent_variable[0])
             with open(fp, &#34;w&#34;) as f:
                 if(header != &#34;&#34;):
@@ -422,7 +422,7 @@ def timestep(self) -&gt; Union[float, timedelta]:
             The delimiting character in the save file. Defaults to a comma
     
     &#34;&#34;&#34;
-    if not isinstance(self.times[0], float, int):
+    if not isinstance(self.times[0], (float, int)):
         dim_dependent = len(self.dependent_variable[0])
         with open(fp, &#34;w&#34;) as f:
             if(header != &#34;&#34;):
