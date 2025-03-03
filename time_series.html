@@ -58,7 +58,7 @@ el.replaceWith(d);
     try: 
         float(date_string)
         return True
-    except:
+    except (ValueError):
         return False</code></pre>
 </details>
 <div class="desc"></div>
@@ -112,8 +112,8 @@ class TimeSeries(Generic[DatetimeLike]):
 
     def __post_init__(self):
         
-        if isinstance(self.times, np.ndarray) and not isinstance(self.times[0], (float, int)):
-            raise ValueError(&#34;Datetime NumPy arrays are not supported. times must be List[int] | List[float] | List[datetime]&#34;)
+        if isinstance(self.times, np.ndarray) and not isinstance(self.times[0], (float, int, np.floating, np.integer)):
+            raise ValueError(f&#34;Datetime NumPy arrays are not supported. times must be List[int] | List[float] | List[datetime]. You entered {type(self.times[0])}&#34;)
         if isinstance(self.times, np.ndarray):
             self.times = self.times.astype(float).tolist()
         
@@ -152,28 +152,49 @@ class TimeSeries(Generic[DatetimeLike]):
                 The delimiting character in the save file. Defaults to a comma
         
         &#34;&#34;&#34;
-        if not isinstance(self.times[0], (float, int)):
-            dim_dependent = len(self.dependent_variable[0])
-            with open(fp, &#34;w&#34;) as f:
+        if(isinstance(fp, (str, Path))):
+            if not isinstance(self.times[0], (float, int, np.floating, np.integer)):
+                dim_dependent = len(self.dependent_variable[0])
+                with open(fp, &#34;w&#34;) as f:
+                    if(header != &#34;&#34;):
+                        f.write(f&#39;{header}\n&#39;)
+                    for t in range(len(self.times)):
+                        out_string = f&#39;{self.times[t]}{delimiter}&#39;
+                        for i in range(dim_dependent):      
+                            out_string += f&#39;{self.dependent_variable[t][i]:.18e}{delimiter}&#39;
+                        f.write(f&#39;{out_string}\n&#39;)
+            else:
+                np.savetxt(
+                    fp,
+                    np.vstack((self.times, self.dependent_variable.T)).T,
+                    delimiter=delimiter,
+                    header=header,
+                    comments=&#34;&#34;
+                )
+        elif isinstance(fp, io.BytesIO): 
+            if not isinstance(self.times[0], (float, int, np.floating, np.integer)):
+                dim_dependent = len(self.dependent_variable[0])
                 if(header != &#34;&#34;):
-                    f.write(f&#39;{header}\n&#39;)
+                    fp.write((f&#39;{header}\n&#39;).encode(&#39;utf-8&#39;))
                 for t in range(len(self.times)):
                     out_string = f&#39;{self.times[t]}{delimiter}&#39;
                     for i in range(dim_dependent):      
                         out_string += f&#39;{self.dependent_variable[t][i]:.18e}{delimiter}&#39;
-                    f.write(f&#39;{out_string}\n&#39;)
-        else:
-            np.savetxt(
-                fp,
-                np.vstack((self.times, self.dependent_variable.T)).T,
-                delimiter=delimiter,
-                header=header,
-                comments=&#34;&#34;
-            )
+                    fp.write((f&#39;{out_string}\n&#39;).encode(&#39;utf-8&#39;))
+            else:
+                np.savetxt(
+                    fp,
+                    np.vstack((self.times, self.dependent_variable.T)).T,
+                    delimiter=delimiter,
+                    header=header,
+                    comments=&#34;&#34;
+                )
+        else: 
+            raise NotImplementedError(&#34;fp must be a file-like object, path name, or Path&#34;)
         
     @property
     def num_dims(self) -&gt; int:
-
+        
         &#34;&#34;&#34;
         The dimensionality of the time series
         
@@ -192,7 +213,7 @@ class TimeSeries(Generic[DatetimeLike]):
         Args:
             fp (Union[IO, str, Path]):
                 The file-like object, path name, or Path in which to read
-
+            
             time_index (int):
                 The column index corresponding to the time column. Defaults to 0
             
@@ -203,34 +224,65 @@ class TimeSeries(Generic[DatetimeLike]):
             TimeSeries: A TimeSeries instance populated by data from the csv file
         &#34;&#34;&#34;
         
-        with open(fp, &#34;r&#34;) as f: 
-            output = []
-            lines = csv.reader(f)
+        if(isinstance(fp, (str, Path))):
+            with open(fp, &#34;r&#34;) as f: 
+                file_output: List[Any] = []
+                lines = csv.reader(f)
+                for idx, line in enumerate(lines):
+                    if(idx == 0 and skip_header):
+                        continue 
+                    if(line[-1] == &#34;&#34;):
+                        line.pop()
+                    file_output.append(line)
+                
+                if(is_float(file_output[1][time_index])):
+                    for i, line in enumerate(file_output):
+                        for j, term in enumerate(line):
+                            file_output[i][j] = float(term)
+                
+                else:
+                    for i, line in enumerate(file_output):
+                        for j, term in enumerate(line):
+                            if(j == time_index):
+                                file_output[i][j] = parser.parse(term)
+                                continue
+                            file_output[i][j] = float(term)
+                
+                return cls(
+                    times=[row[time_index] for row in file_output],
+                    dependent_variable=np.array([row[:(time_index)] + row[(time_index+1):] for row in file_output])
+                )
+            
+        elif isinstance(fp, io.BytesIO):
+            stream_output: List[Any] = []
+            lines = csv.reader(fp.read().decode(&#39;utf-8&#39;).splitlines())
             for idx, line in enumerate(lines):
                 if(idx == 0 and skip_header):
                     continue 
                 if(line[-1] == &#34;&#34;):
                     line.pop()
-                output.append(line)
+                stream_output.append(line)
             
-            if(is_float(output[1][time_index])):
-                for i, line in enumerate(output):
+            if(is_float(stream_output[1][time_index])):
+                for i, line in enumerate(stream_output):
                     for j, term in enumerate(line):
-                        output[i][j] = float(term)
+                        stream_output[i][j] = float(term)
             
             else:
-                for i, line in enumerate(output):
+                for i, line in enumerate(stream_output):
                     for j, term in enumerate(line):
                         if(j == time_index):
-                            output[i][j] = parser.parse(term)
+                            stream_output[i][j] = parser.parse(term)
                             continue
-                        output[i][j] = float(term)
-
+                        stream_output[i][j] = float(term)
+            
             return cls(
-                times=[row[time_index] for row in output],
-                dependent_variable=np.array([row[:(time_index)] + row[(time_index+1):] for row in output])
+                times=[row[time_index] for row in stream_output],
+                dependent_variable=np.array([row[:(time_index)] + row[(time_index+1):] for row in stream_output])
             )
-    
+        
+        else: 
+            raise NotImplementedError(&#34;fp must be a file-like object, path name, or Path&#34;)
     
     @property
     def timestep(self) -&gt; Union[float, timedelta]:
@@ -353,7 +405,7 @@ Whether to skip the first row of the csv file or not. Defaults to false</p>
 </summary>
 <pre><code class="python">@property
 def num_dims(self) -&gt; int:
-
+    
     &#34;&#34;&#34;
     The dimensionality of the time series
     
@@ -422,24 +474,45 @@ def timestep(self) -&gt; Union[float, timedelta]:
             The delimiting character in the save file. Defaults to a comma
     
     &#34;&#34;&#34;
-    if not isinstance(self.times[0], (float, int)):
-        dim_dependent = len(self.dependent_variable[0])
-        with open(fp, &#34;w&#34;) as f:
+    if(isinstance(fp, (str, Path))):
+        if not isinstance(self.times[0], (float, int, np.floating, np.integer)):
+            dim_dependent = len(self.dependent_variable[0])
+            with open(fp, &#34;w&#34;) as f:
+                if(header != &#34;&#34;):
+                    f.write(f&#39;{header}\n&#39;)
+                for t in range(len(self.times)):
+                    out_string = f&#39;{self.times[t]}{delimiter}&#39;
+                    for i in range(dim_dependent):      
+                        out_string += f&#39;{self.dependent_variable[t][i]:.18e}{delimiter}&#39;
+                    f.write(f&#39;{out_string}\n&#39;)
+        else:
+            np.savetxt(
+                fp,
+                np.vstack((self.times, self.dependent_variable.T)).T,
+                delimiter=delimiter,
+                header=header,
+                comments=&#34;&#34;
+            )
+    elif isinstance(fp, io.BytesIO): 
+        if not isinstance(self.times[0], (float, int, np.floating, np.integer)):
+            dim_dependent = len(self.dependent_variable[0])
             if(header != &#34;&#34;):
-                f.write(f&#39;{header}\n&#39;)
+                fp.write((f&#39;{header}\n&#39;).encode(&#39;utf-8&#39;))
             for t in range(len(self.times)):
                 out_string = f&#39;{self.times[t]}{delimiter}&#39;
                 for i in range(dim_dependent):      
                     out_string += f&#39;{self.dependent_variable[t][i]:.18e}{delimiter}&#39;
-                f.write(f&#39;{out_string}\n&#39;)
-    else:
-        np.savetxt(
-            fp,
-            np.vstack((self.times, self.dependent_variable.T)).T,
-            delimiter=delimiter,
-            header=header,
-            comments=&#34;&#34;
-        )</code></pre>
+                fp.write((f&#39;{out_string}\n&#39;).encode(&#39;utf-8&#39;))
+        else:
+            np.savetxt(
+                fp,
+                np.vstack((self.times, self.dependent_variable.T)).T,
+                delimiter=delimiter,
+                header=header,
+                comments=&#34;&#34;
+            )
+    else: 
+        raise NotImplementedError(&#34;fp must be a file-like object, path name, or Path&#34;)</code></pre>
 </details>
 <div class="desc"><p>Method to save a time series</p>
 <h2 id="args">Args</h2>
