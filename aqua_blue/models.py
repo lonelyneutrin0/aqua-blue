@@ -3,13 +3,16 @@ Module defining models, i.e. compositions of reservoir(s) and readout layers
 """
 
 from dataclasses import dataclass, field
+from typing import Union
 
 import numpy as np
 
 from .reservoirs import Reservoir
 from .readouts import Readout
 from .time_series import TimeSeries
+from .datetimelikearray import DatetimeLikeArray
 
+import datetime
 
 @dataclass
 class Model:
@@ -20,19 +23,22 @@ class Model:
 
     reservoir: Reservoir
     """reservoir defining input -> reservoir mapping"""
-
+    
     readout: Readout
     """readout defining reservoir -> output mapping"""
-
+    
     final_time: float = field(init=False)
     """final time read during training. will be set at training"""
 
     timestep: float = field(init=False)
     """timestep read during training. will be set at training"""
-
+    
     initial_guess: np.typing.NDArray[np.floating] = field(init=False)
     """initial guess read during training. will be set at training"""
 
+    tz: Union[datetime.tzinfo, None] = field(init=False)
+    """timezone of the independent variable. Set to None if the DatetimeLikeArray is incompatible"""
+    
     def train(
         self,
         input_time_series: TimeSeries,
@@ -41,7 +47,7 @@ class Model:
     ):
         """
         Training method for model
-
+        
         Args:
             input_time_series: TimeSeries instance to train on
             warmup: Number of initial steps to ignore in training
@@ -65,6 +71,8 @@ class Model:
         self.readout.coefficients = w_out_transpose.T
         self.timestep = input_time_series.timestep
         self.final_time = input_time_series.times[-1]
+        self.tz = input_time_series.times.tz
+        self.times_dtype = input_time_series.times.dtype
         self.initial_guess = time_series_array[-1, :]
     
     def predict(self, horizon: int) -> TimeSeries:
@@ -88,7 +96,17 @@ class Model:
                 self.reservoir.update_reservoir(predictions[i-1, :])
             )
         
+        times_ = DatetimeLikeArray.from_array(
+        np.arange(
+            start=self.final_time + self.timestep,
+            stop=self.final_time + (horizon + 1) * self.timestep,
+            step=self.timestep,
+            dtype=self.times_dtype
+        ),
+        tz=self.tz, 
+        )
+        
         return TimeSeries(
             dependent_variable=predictions,
-            times=[self.final_time + step * self.timestep for step in range(1, horizon + 1)]
+            times=times_
         )
