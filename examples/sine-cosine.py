@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 
 import aqua_blue
 
+
 def main():
     
     start_date = datetime.datetime.now().astimezone(ZoneInfo("Indian/Maldives"))
@@ -14,7 +15,7 @@ def main():
     t = [start_date + datetime.timedelta(minutes=i) for i in range(10000)]
     a = np.arange(len(t))/100
     y = np.vstack((np.cos(a)+1, np.sin(a)-1)).T
-    time_series = aqua_blue.TimeSeries(dependent_variable=y, times=t)
+    time_series = aqua_blue.time_series.TimeSeries(dependent_variable=y, times=t)
     normalizer = aqua_blue.utilities.Normalizer()
     time_series = normalizer.normalize(time_series)
     
@@ -29,7 +30,6 @@ def main():
 
     prediction = model.predict(horizon=1_000)
     prediction = normalizer.denormalize(prediction)
-    
 
     actual_future = np.vstack((
         (np.cos(np.arange(a[-1], a[-1]+10, step=0.01))+1, np.sin(np.arange(a[-1], a[-1]+10, step=0.01))-1)
@@ -44,6 +44,7 @@ def main():
     plt.plot(prediction.times, prediction.dependent_variable)
     plt.legend(['actual_x', 'actual_y', 'predicted_x', 'predicted_y'])
     plt.show()
+
 
 if __name__ == "__main__":
 

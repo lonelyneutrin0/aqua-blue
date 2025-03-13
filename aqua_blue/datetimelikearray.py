@@ -2,13 +2,13 @@ from pathlib import Path
 
 import numpy as np
 
-from typing import List, IO, Union, TypeVar, Type
+from typing import List, IO, Union, TypeVar, Type, Sequence
 
 from zoneinfo import ZoneInfo
 import datetime
 
 # Type checking
-DatetimeLike = TypeVar("DatetimeLike", float, datetime.datetime)
+DatetimeLike = TypeVar("DatetimeLike", float, datetime.datetime, np.datetime64)
 
 
 class DatetimeLikeArray(np.ndarray):
@@ -31,7 +31,10 @@ class DatetimeLikeArray(np.ndarray):
     Store the timezone offset information for the array. Default is None
     """
 
-    def __new__(cls, input_array: List[DatetimeLike], dtype, buffer=None, offset=0, strides=None, order=None):
+    def __new__(cls, input_array: Sequence[DatetimeLike], dtype, buffer=None, offset=0, strides=None, order=None):
+
+        if isinstance(input_array[0], np.datetime64):
+            return input_array
        
         if not isinstance(input_array[0], datetime.datetime):
             # If you pass List[float] treat it like a normal NumPy array
