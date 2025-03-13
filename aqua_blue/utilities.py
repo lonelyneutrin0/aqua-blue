@@ -10,7 +10,6 @@ import numpy as np
 from .time_series import TimeSeries
 
 
-
 @dataclass
 class Normalizer:
 

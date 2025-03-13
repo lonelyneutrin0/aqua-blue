@@ -42,7 +42,6 @@ class Reservoir(ABC):
 
         Args:
             input_state: input state to map to reservoir state
-            leaking_rate: leaking rate for the reservoir state. Defaults to 1
         """
         
         pass
@@ -100,8 +99,7 @@ class DynamicalReservoir(Reservoir):
                 high=0.5, 
                 size=(self.reservoir_dimensionality, self.reservoir_dimensionality)
             )
-        spectral_radius = np.linalg.norm(self.w_res, ord=2)
-        self.w_res /= (spectral_radius/0.95)
+            self.w_res = 0.95 * self.w_res / np.linalg.norm(self.w_res, ord=2)
         
         self.res_state = np.zeros(self.reservoir_dimensionality)
     
@@ -112,10 +110,10 @@ class DynamicalReservoir(Reservoir):
         
         Args:
             input_state: input state to map to reservoir state
-            leaking_rate: leaking rate for the reservoir state. Defaults to 1
         """
         
         assert isinstance(self.w_in, np.ndarray)
         assert isinstance(self.w_res, np.ndarray)
-        self.res_state = (1-self.leaking_rate)*self.res_state + self.leaking_rate * self.activation_function(self.w_in @ input_state + self.w_res @ self.res_state)
+        self.res_state = (1.0 - self.leaking_rate) * self.res_state \
+            + self.leaking_rate * self.activation_function(self.w_in @ input_state + self.w_res @ self.res_state)
         return self.res_state

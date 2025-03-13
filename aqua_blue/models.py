@@ -14,6 +14,7 @@ from .datetimelikearray import DatetimeLikeArray
 
 import datetime
 
+
 @dataclass
 class Model:
 
@@ -97,13 +98,13 @@ class Model:
             )
         
         times_ = DatetimeLikeArray.from_array(
-        np.arange(
-            start=self.final_time + self.timestep,
-            stop=self.final_time + (horizon + 1) * self.timestep,
-            step=self.timestep,
-            dtype=self.times_dtype
-        ),
-        tz=self.tz, 
+            np.arange(
+                start=self.final_time + self.timestep,
+                stop=self.final_time + (horizon + 1) * self.timestep,
+                step=self.timestep,
+                dtype=self.times_dtype
+            ),
+            tz=self.tz,
         )
         
         return TimeSeries(
