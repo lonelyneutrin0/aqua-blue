@@ -108,17 +108,21 @@ class DynamicalReservoir(Reservoir):
         if self.generator is None:
             self.generator = np.random.default_rng(seed=0)
         
-        if self.w_in is None:
-            self.w_in = self.generator.uniform(
-                low=-0.5,
-                high=0.5,
-                size=(self.reservoir_dimensionality, self.input_dimensionality)
-            )
-        if self.w_res is None: 
-            self.w_res = self.generator.uniform(
-                low=-0.5,
+        if not self.w_in: 
+            self.w_in = from_uniform(
+                low=-0.5, 
                 high=0.5, 
-                size=(self.reservoir_dimensionality, self.reservoir_dimensionality)
+                reservoir_dimensionality=self.reservoir_dimensionality, 
+                input_dimensionality=self.input_dimensionality,
+                gen=self.generator
+            )
+        
+        if not self.w_res: 
+            self.w_res = from_uniform(
+                low=-0.5, 
+                high=0.5, 
+                reservoir_dimensionality=self.reservoir_dimensionality,
+                gen=self.generator
             )
 
         self.w_res = (self.spectral_radius / np.linalg.norm(self.w_res, ord=2)) * self.w_res 
