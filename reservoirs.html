@@ -56,7 +56,7 @@ el.replaceWith(d);
 <dl>
 <dt id="aqua_blue.reservoirs.DynamicalReservoir"><code class="flex name class">
 <span>class <span class="ident">DynamicalReservoir</span></span>
-<span>(</span><span>input_dimensionality: int,<br>reservoir_dimensionality: int,<br>generator: numpy.random._generator.Generator | None = None,<br>w_in: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]] | None = None,<br>w_res: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]] | None = None,<br>activation_function: <a title="aqua_blue.reservoirs.ActivationFunction" href="#aqua_blue.reservoirs.ActivationFunction">ActivationFunction</a> = &lt;ufunc &#x27;tanh&#x27;&gt;,<br>leaking_rate: float = 1,<br>spectral_radius: float | None = None,<br>sparsity: float | None = None)</span>
+<span>(</span><span>input_dimensionality: int,<br>reservoir_dimensionality: int,<br>generator: numpy.random._generator.Generator | None = None,<br>w_in: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]] | None = None,<br>w_res: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]] | None = None,<br>activation_function: <a title="aqua_blue.reservoirs.ActivationFunction" href="#aqua_blue.reservoirs.ActivationFunction">ActivationFunction</a> = &lt;ufunc &#x27;tanh&#x27;&gt;,<br>leaking_rate: float | None = 1,<br>spectral_radius: float | None = None,<br>sparsity: float | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -93,7 +93,7 @@ class DynamicalReservoir(Reservoir):
     activation function f. defaults to np.tanh
     &#34;&#34;&#34;
     
-    leaking_rate: float = 1
+    leaking_rate: Optional[float] = 1
     &#34;&#34;&#34; 
     leaking rate for the reservoir state. Defaults to 1
     &#34;&#34;&#34;
@@ -173,7 +173,7 @@ where f is some nonlinear activation function</p></div>
 <div class="desc"><p>random generator for the class to use
 will be set to np.random.default_rng(seed=0) if not specified</p></div>
 </dd>
-<dt id="aqua_blue.reservoirs.DynamicalReservoir.leaking_rate"><code class="name">var <span class="ident">leaking_rate</span> : float</code></dt>
+<dt id="aqua_blue.reservoirs.DynamicalReservoir.leaking_rate"><code class="name">var <span class="ident">leaking_rate</span> : float | None</code></dt>
 <dd>
 <div class="desc"><p>leaking rate for the reservoir state. Defaults to 1</p></div>
 </dd>
