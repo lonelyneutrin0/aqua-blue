@@ -129,10 +129,12 @@ class DynamicalReservoir(Reservoir):
                 reservoir_dimensionality=self.reservoir_dimensionality,
                 gen=self.generator
             )
-            if self.spectral_radius: 
-                self.w_res = make_sparse(self.w_res, sparsity=self.sparsity)
-            if self.sparsity:
-                self.w_res = set_spectral(self.w_res, spectral_radius=self.spectral_radius)
+
+        if self.sparsity: 
+            self.w_res = make_sparse(self.w_res, sparsity=self.sparsity)
+            
+        if self.spectral_radius:
+            self.w_res = set_spectral(self.w_res, spectral_radius=self.spectral_radius)
 
         
         self.res_state = np.zeros(self.reservoir_dimensionality)
