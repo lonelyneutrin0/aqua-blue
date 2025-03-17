@@ -56,7 +56,7 @@ el.replaceWith(d);
 <dl>
 <dt id="aqua_blue.reservoirs.DynamicalReservoir"><code class="flex name class">
 <span>class <span class="ident">DynamicalReservoir</span></span>
-<span>(</span><span>input_dimensionality: int,<br>reservoir_dimensionality: int,<br>generator: numpy.random._generator.Generator | None = None,<br>w_in: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]] | None = None,<br>w_res: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]] | None = None,<br>activation_function: <a title="aqua_blue.reservoirs.ActivationFunction" href="#aqua_blue.reservoirs.ActivationFunction">ActivationFunction</a> = &lt;ufunc &#x27;tanh&#x27;&gt;,<br>leaking_rate: float = 1,<br>spectral_radius: float = 1)</span>
+<span>(</span><span>input_dimensionality: int,<br>reservoir_dimensionality: int,<br>generator: numpy.random._generator.Generator | None = None,<br>w_in: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]] | None = None,<br>w_res: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]] | None = None,<br>activation_function: <a title="aqua_blue.reservoirs.ActivationFunction" href="#aqua_blue.reservoirs.ActivationFunction">ActivationFunction</a> = &lt;ufunc &#x27;tanh&#x27;&gt;,<br>leaking_rate: float = 1,<br>spectral_radius: float | None = None,<br>sparsity: float | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -98,9 +98,14 @@ class DynamicalReservoir(Reservoir):
     leaking rate for the reservoir state. Defaults to 1
     &#34;&#34;&#34;
     
-    spectral_radius: float = 1
+    spectral_radius: Optional[float]=None
     &#34;&#34;&#34;
-    spectral radius of W_res, which controls memory strength. Defaults to 1
+    spectral radius of W_res, which controls memory strength. Defaults to None
+    &#34;&#34;&#34;
+
+    sparsity: Optional[float]=None
+    &#34;&#34;&#34;
+    sparsity of the reservoir weight matrix. Ranges from 0 to 1. Defaults to None
     &#34;&#34;&#34;
     
     def __post_init__(self):
@@ -124,8 +129,11 @@ class DynamicalReservoir(Reservoir):
                 reservoir_dimensionality=self.reservoir_dimensionality,
                 gen=self.generator
             )
+            if self.spectral_radius: 
+                self.w_res = make_sparse(self.w_res, sparsity=self.sparsity)
+            if self.sparsity:
+                self.w_res = set_spectral(self.w_res, spectral_radius=self.spectral_radius)
 
-        self.w_res = (self.spectral_radius / np.linalg.norm(self.w_res, ord=2)) * self.w_res 
         
         self.res_state = np.zeros(self.reservoir_dimensionality)
     
@@ -167,9 +175,13 @@ will be set to np.random.default_rng(seed=0) if not specified</p></div>
 <dd>
 <div class="desc"><p>leaking rate for the reservoir state. Defaults to 1</p></div>
 </dd>
-<dt id="aqua_blue.reservoirs.DynamicalReservoir.spectral_radius"><code class="name">var <span class="ident">spectral_radius</span> : float</code></dt>
+<dt id="aqua_blue.reservoirs.DynamicalReservoir.sparsity"><code class="name">var <span class="ident">sparsity</span> : float | None</code></dt>
 <dd>
-<div class="desc"><p>spectral radius of W_res, which controls memory strength. Defaults to 1</p></div>
+<div class="desc"><p>sparsity of the reservoir weight matrix. Ranges from 0 to 1. Defaults to None</p></div>
+</dd>
+<dt id="aqua_blue.reservoirs.DynamicalReservoir.spectral_radius"><code class="name">var <span class="ident">spectral_radius</span> : float | None</code></dt>
+<dd>
+<div class="desc"><p>spectral radius of W_res, which controls memory strength. Defaults to None</p></div>
 </dd>
 <dt id="aqua_blue.reservoirs.DynamicalReservoir.w_in"><code class="name">var <span class="ident">w_in</span> : numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]] | None</code></dt>
 <dd>
@@ -344,6 +356,7 @@ def update_reservoir(self, input_state: np.typing.NDArray[np.floating]) -&gt; np
 <li><code><a title="aqua_blue.reservoirs.DynamicalReservoir.activation_function" href="#aqua_blue.reservoirs.DynamicalReservoir.activation_function">activation_function</a></code></li>
 <li><code><a title="aqua_blue.reservoirs.DynamicalReservoir.generator" href="#aqua_blue.reservoirs.DynamicalReservoir.generator">generator</a></code></li>
 <li><code><a title="aqua_blue.reservoirs.DynamicalReservoir.leaking_rate" href="#aqua_blue.reservoirs.DynamicalReservoir.leaking_rate">leaking_rate</a></code></li>
+<li><code><a title="aqua_blue.reservoirs.DynamicalReservoir.sparsity" href="#aqua_blue.reservoirs.DynamicalReservoir.sparsity">sparsity</a></code></li>
 <li><code><a title="aqua_blue.reservoirs.DynamicalReservoir.spectral_radius" href="#aqua_blue.reservoirs.DynamicalReservoir.spectral_radius">spectral_radius</a></code></li>
 <li><code><a title="aqua_blue.reservoirs.DynamicalReservoir.update_reservoir" href="#aqua_blue.reservoirs.DynamicalReservoir.update_reservoir">update_reservoir</a></code></li>
 <li><code><a title="aqua_blue.reservoirs.DynamicalReservoir.w_in" href="#aqua_blue.reservoirs.DynamicalReservoir.w_in">w_in</a></code></li>
