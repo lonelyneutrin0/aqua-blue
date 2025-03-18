@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.5">
 <title>aqua_blue.readouts API documentation</title>
-<meta name="description" content="Module defining readout layers">
+<meta name="description" content="Module defining readout layers …">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
@@ -36,7 +36,16 @@ el.replaceWith(d);
 <h1 class="title">Module <code>aqua_blue.readouts</code></h1>
 </header>
 <section id="section-intro">
-<p>Module defining readout layers</p>
+<p>Module defining readout layers.</p>
+<p>This module provides the abstract <code><a title="aqua_blue.readouts.Readout" href="#aqua_blue.readouts.Readout">Readout</a></code> class and its concrete implementation,
+<code><a title="aqua_blue.readouts.LinearReadout" href="#aqua_blue.readouts.LinearReadout">LinearReadout</a></code>. Readout layers map the internal reservoir states of an Echo State
+Network (ESN) to output values.</p>
+<h2 id="classes">Classes</h2>
+<ul>
+<li>Readout: Abstract base class defining the interface for readout layers.</li>
+<li>LinearReadout: A linear mapping readout layer that transforms reservoir states
+into output values using learned coefficients.</li>
+</ul>
 </section>
 <section>
 </section>
@@ -58,15 +67,24 @@ el.replaceWith(d);
 </summary>
 <pre><code class="python">@dataclass
 class LinearReadout(Readout):
-
     &#34;&#34;&#34;
-    Linear readout layer, reservoir_state -&gt; W @ reservoir_state
+    A linear readout layer that applies a learned linear transformation to reservoir states.
+
+    This readout layer learns a set of coefficients during training and applies a
+    simple linear mapping to transform reservoir states into output predictions.
+
+    Attributes:
+        rcond (float):
+            A regularization parameter used in the pseudo-inverse calculation to
+            prevent numerical instability in the least squares solution.
     &#34;&#34;&#34;
 
     rcond: float = 1.0e-10
     &#34;&#34;&#34;
-    condition number, or minimum singular value.
-    should be as small as possible while still preserving numerical stability
+    Regularization parameter for pseudo-inverse computation.
+
+    This controls the minimum singular value considered for the pseudo-inverse 
+    computation. A lower value ensures more stable training.
     &#34;&#34;&#34;
 
     def train(
@@ -75,33 +93,58 @@ class LinearReadout(Readout):
         dependent_variables: np.typing.NDArray[np.floating]
     ):
         r&#34;&#34;&#34;
-        Train linear layer, setting coefficients. Solves the following optimization problem
-        $W^* = \lim_{\lambda\to 0^+} argmin_W \| XW - Y\|_F^2 + \lambda \|W\|_F^2$
+        Trains the linear readout layer by solving the least-squares optimization problem.
+
+        The training process determines the optimal readout coefficients \( W^* \) by
+        minimizing the error in the following equation:
+
+        \[
+        W^* = \lim_{\lambda\to 0^+} \arg\min_W \| XW - Y\|_F^2 + \lambda \|W\|_F^2
+        \]
+
+        where:
+            - \( X \) is the matrix of reservoir states (independent variables).
+            - \( Y \) is the matrix of target output values (dependent variables).
+            - \( \lambda \) is the regularization parameter controlled by `rcond`.
 
         Args:
-            independent_variables: Independent (or input) data for training
-            dependent_variables: Dependent (or response) data for training
+            independent_variables (np.ndarray):
+                The reservoir state matrix used for training.
+            dependent_variables (np.ndarray):
+                The target output values corresponding to the reservoir states.
         &#34;&#34;&#34;
-
         coeff = np.linalg.pinv(independent_variables, rcond=self.rcond) @ dependent_variables
         self.coefficients = coeff.T
 
     def reservoir_to_output(self, reservoir_state: np.typing.NDArray[np.floating]) -&gt; np.typing.NDArray[np.floating]:
-
         &#34;&#34;&#34;
-        Linearly from reservoir state to output, i.e. just self.coefficients @ reservoir_state
+        Computes the output from a given reservoir state using a learned linear mapping.
+
+        This method applies the learned weight matrix (`self.coefficients`) to map
+        the reservoir state to an output value.
 
         Args:
-            reservoir_state (np.typing.NDArray):
-                reservoir state to map to output state
-        &#34;&#34;&#34;
+            reservoir_state (np.ndarray):
+                The reservoir state to be mapped to an output value.
 
+        Returns:
+            np.ndarray: The predicted output value.
+
+        Raises:
+            ValueError: If the readout layer has not been trained (i.e., coefficients are not set).
+        &#34;&#34;&#34;
         if not hasattr(self, &#34;coefficients&#34;):
             raise ValueError(&#34;Need to train readout before using it&#34;)
 
         return self.coefficients @ reservoir_state</code></pre>
 </details>
-<div class="desc"><p>Linear readout layer, reservoir_state -&gt; W @ reservoir_state</p></div>
+<div class="desc"><p>A linear readout layer that applies a learned linear transformation to reservoir states.</p>
+<p>This readout layer learns a set of coefficients during training and applies a
+simple linear mapping to transform reservoir states into output predictions.</p>
+<h2 id="attributes">Attributes</h2>
+<p>rcond (float):
+A regularization parameter used in the pseudo-inverse calculation to
+prevent numerical instability in the least squares solution.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="aqua_blue.readouts.Readout" href="#aqua_blue.readouts.Readout">Readout</a></li>
@@ -111,8 +154,9 @@ class LinearReadout(Readout):
 <dl>
 <dt id="aqua_blue.readouts.LinearReadout.rcond"><code class="name">var <span class="ident">rcond</span> : float</code></dt>
 <dd>
-<div class="desc"><p>condition number, or minimum singular value.
-should be as small as possible while still preserving numerical stability</p></div>
+<div class="desc"><p>Regularization parameter for pseudo-inverse computation.</p>
+<p>This controls the minimum singular value considered for the pseudo-inverse
+computation. A lower value ensures more stable training.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -126,24 +170,43 @@ should be as small as possible while still preserving numerical stability</p></d
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def reservoir_to_output(self, reservoir_state: np.typing.NDArray[np.floating]) -&gt; np.typing.NDArray[np.floating]:
-
     &#34;&#34;&#34;
-    Linearly from reservoir state to output, i.e. just self.coefficients @ reservoir_state
+    Computes the output from a given reservoir state using a learned linear mapping.
+
+    This method applies the learned weight matrix (`self.coefficients`) to map
+    the reservoir state to an output value.
 
     Args:
-        reservoir_state (np.typing.NDArray):
-            reservoir state to map to output state
-    &#34;&#34;&#34;
+        reservoir_state (np.ndarray):
+            The reservoir state to be mapped to an output value.
 
+    Returns:
+        np.ndarray: The predicted output value.
+
+    Raises:
+        ValueError: If the readout layer has not been trained (i.e., coefficients are not set).
+    &#34;&#34;&#34;
     if not hasattr(self, &#34;coefficients&#34;):
         raise ValueError(&#34;Need to train readout before using it&#34;)
 
     return self.coefficients @ reservoir_state</code></pre>
 </details>
-<div class="desc"><p>Linearly from reservoir state to output, i.e. just self.coefficients @ reservoir_state</p>
+<div class="desc"><p>Computes the output from a given reservoir state using a learned linear mapping.</p>
+<p>This method applies the learned weight matrix (<code>self.coefficients</code>) to map
+the reservoir state to an output value.</p>
 <h2 id="args">Args</h2>
-<p>reservoir_state (np.typing.NDArray):
-reservoir state to map to output state</p></div>
+<p>reservoir_state (np.ndarray):
+The reservoir state to be mapped to an output value.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>np.ndarray</code></dt>
+<dd>The predicted output value.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If the readout layer has not been trained (i.e., coefficients are not set).</dd>
+</dl></div>
 </dd>
 <dt id="aqua_blue.readouts.LinearReadout.train"><code class="name flex">
 <span>def <span class="ident">train</span></span>(<span>self,<br>independent_variables: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]],<br>dependent_variables: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]])</span>
@@ -159,26 +222,44 @@ reservoir state to map to output state</p></div>
     dependent_variables: np.typing.NDArray[np.floating]
 ):
     r&#34;&#34;&#34;
-    Train linear layer, setting coefficients. Solves the following optimization problem
-    $W^* = \lim_{\lambda\to 0^+} argmin_W \| XW - Y\|_F^2 + \lambda \|W\|_F^2$
+    Trains the linear readout layer by solving the least-squares optimization problem.
+
+    The training process determines the optimal readout coefficients \( W^* \) by
+    minimizing the error in the following equation:
+
+    \[
+    W^* = \lim_{\lambda\to 0^+} \arg\min_W \| XW - Y\|_F^2 + \lambda \|W\|_F^2
+    \]
+
+    where:
+        - \( X \) is the matrix of reservoir states (independent variables).
+        - \( Y \) is the matrix of target output values (dependent variables).
+        - \( \lambda \) is the regularization parameter controlled by `rcond`.
 
     Args:
-        independent_variables: Independent (or input) data for training
-        dependent_variables: Dependent (or response) data for training
+        independent_variables (np.ndarray):
+            The reservoir state matrix used for training.
+        dependent_variables (np.ndarray):
+            The target output values corresponding to the reservoir states.
     &#34;&#34;&#34;
-
     coeff = np.linalg.pinv(independent_variables, rcond=self.rcond) @ dependent_variables
     self.coefficients = coeff.T</code></pre>
 </details>
-<div class="desc"><p>Train linear layer, setting coefficients. Solves the following optimization problem
-$W^* = \lim_{\lambda\to 0^+} argmin_W | XW - Y|_F^2 + \lambda |W|_F^2$</p>
+<div class="desc"><p>Trains the linear readout layer by solving the least-squares optimization problem.</p>
+<p>The training process determines the optimal readout coefficients ( W^* ) by
+minimizing the error in the following equation:</p>
+<p>[
+W^* = \lim_{\lambda\to 0^+} \arg\min_W | XW - Y|_F^2 + \lambda |W|_F^2
+]</p>
+<p>where:
+- ( X ) is the matrix of reservoir states (independent variables).
+- ( Y ) is the matrix of target output values (dependent variables).
+- ( \lambda ) is the regularization parameter controlled by <code>rcond</code>.</p>
 <h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>independent_variables</code></strong></dt>
-<dd>Independent (or input) data for training</dd>
-<dt><strong><code>dependent_variables</code></strong></dt>
-<dd>Dependent (or response) data for training</dd>
-</dl></div>
+<p>independent_variables (np.ndarray):
+The reservoir state matrix used for training.
+dependent_variables (np.ndarray):
+The target output values corresponding to the reservoir states.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -200,13 +281,20 @@ $W^* = \lim_{\lambda\to 0^+} argmin_W | XW - Y|_F^2 + \lambda |W|_F^2$</p>
 </summary>
 <pre><code class="python">@dataclass
 class Readout(ABC):
-    
     &#34;&#34;&#34;
-    Abstract readout layer, defining reservoir state -&gt; output state mapping
+    Abstract base class for readout layers in Echo State Networks (ESNs).
+
+    Readout layers transform the high-dimensional reservoir states into output
+    predictions. The transformation is typically learned during training.
+
+    Attributes:
+        coefficients (np.ndarray):
+            The learned weights for mapping reservoir states to output values.
+            This is set after training.
     &#34;&#34;&#34;
 
     coefficients: np.typing.NDArray[np.floating] = field(init=False)
-    &#34;&#34;&#34;coefficients defining the readout layer, which will later be fitted&#34;&#34;&#34;
+    &#34;&#34;&#34;The learned weight matrix for the readout layer, initialized during training.&#34;&#34;&#34;
 
     @abstractmethod
     def train(
@@ -214,28 +302,40 @@ class Readout(ABC):
         independent_variables: np.typing.NDArray[np.floating],
         dependent_variables: np.typing.NDArray[np.floating]
     ):
-
         &#34;&#34;&#34;
-        Train readout layer, sets the coefficients attribute
+        Trains the readout layer by learning the mapping from reservoir states to output values.
+
+        This method takes independent input variables (reservoir states) and corresponding
+        dependent variables (target outputs) to compute the optimal readout weights.
 
         Args:
-            independent_variables: Independent (or input) data for training
-            dependent_variables: Dependent (or response) data for training
+            independent_variables (np.ndarray):
+                The reservoir state matrix used as input for training.
+            dependent_variables (np.ndarray):
+                The expected output values corresponding to the input states.
         &#34;&#34;&#34;
 
     @abstractmethod
     def reservoir_to_output(self, reservoir_state: np.typing.NDArray[np.floating]) -&gt; np.typing.NDArray[np.floating]:
-
         &#34;&#34;&#34;
-        Map from reservoir state to output
+        Maps a given reservoir state to an output value.
 
         Args:
-            reservoir_state: reservoir state to map to output state
-        &#34;&#34;&#34;
+            reservoir_state (np.ndarray):
+                The current state of the reservoir.
 
+        Returns:
+            np.ndarray: The predicted output corresponding to the given reservoir state.
+        &#34;&#34;&#34;
         pass</code></pre>
 </details>
-<div class="desc"><p>Abstract readout layer, defining reservoir state -&gt; output state mapping</p></div>
+<div class="desc"><p>Abstract base class for readout layers in Echo State Networks (ESNs).</p>
+<p>Readout layers transform the high-dimensional reservoir states into output
+predictions. The transformation is typically learned during training.</p>
+<h2 id="attributes">Attributes</h2>
+<p>coefficients (np.ndarray):
+The learned weights for mapping reservoir states to output values.
+This is set after training.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>abc.ABC</li>
@@ -248,7 +348,7 @@ class Readout(ABC):
 <dl>
 <dt id="aqua_blue.readouts.Readout.coefficients"><code class="name">var <span class="ident">coefficients</span> : numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]]</code></dt>
 <dd>
-<div class="desc"><p>coefficients defining the readout layer, which will later be fitted</p></div>
+<div class="desc"><p>The learned weight matrix for the readout layer, initialized during training.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -263,21 +363,26 @@ class Readout(ABC):
 </summary>
 <pre><code class="python">@abstractmethod
 def reservoir_to_output(self, reservoir_state: np.typing.NDArray[np.floating]) -&gt; np.typing.NDArray[np.floating]:
-
     &#34;&#34;&#34;
-    Map from reservoir state to output
+    Maps a given reservoir state to an output value.
 
     Args:
-        reservoir_state: reservoir state to map to output state
-    &#34;&#34;&#34;
+        reservoir_state (np.ndarray):
+            The current state of the reservoir.
 
+    Returns:
+        np.ndarray: The predicted output corresponding to the given reservoir state.
+    &#34;&#34;&#34;
     pass</code></pre>
 </details>
-<div class="desc"><p>Map from reservoir state to output</p>
+<div class="desc"><p>Maps a given reservoir state to an output value.</p>
 <h2 id="args">Args</h2>
+<p>reservoir_state (np.ndarray):
+The current state of the reservoir.</p>
+<h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>reservoir_state</code></strong></dt>
-<dd>reservoir state to map to output state</dd>
+<dt><code>np.ndarray</code></dt>
+<dd>The predicted output corresponding to the given reservoir state.</dd>
 </dl></div>
 </dd>
 <dt id="aqua_blue.readouts.Readout.train"><code class="name flex">
@@ -294,23 +399,27 @@ def train(
     independent_variables: np.typing.NDArray[np.floating],
     dependent_variables: np.typing.NDArray[np.floating]
 ):
-
     &#34;&#34;&#34;
-    Train readout layer, sets the coefficients attribute
+    Trains the readout layer by learning the mapping from reservoir states to output values.
+
+    This method takes independent input variables (reservoir states) and corresponding
+    dependent variables (target outputs) to compute the optimal readout weights.
 
     Args:
-        independent_variables: Independent (or input) data for training
-        dependent_variables: Dependent (or response) data for training
+        independent_variables (np.ndarray):
+            The reservoir state matrix used as input for training.
+        dependent_variables (np.ndarray):
+            The expected output values corresponding to the input states.
     &#34;&#34;&#34;</code></pre>
 </details>
-<div class="desc"><p>Train readout layer, sets the coefficients attribute</p>
+<div class="desc"><p>Trains the readout layer by learning the mapping from reservoir states to output values.</p>
+<p>This method takes independent input variables (reservoir states) and corresponding
+dependent variables (target outputs) to compute the optimal readout weights.</p>
 <h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>independent_variables</code></strong></dt>
-<dd>Independent (or input) data for training</dd>
-<dt><strong><code>dependent_variables</code></strong></dt>
-<dd>Dependent (or response) data for training</dd>
-</dl></div>
+<p>independent_variables (np.ndarray):
+The reservoir state matrix used as input for training.
+dependent_variables (np.ndarray):
+The expected output values corresponding to the input states.</p></div>
 </dd>
 </dl>
 </dd>

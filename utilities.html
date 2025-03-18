@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.5">
 <title>aqua_blue.utilities API documentation</title>
-<meta name="description" content="This module provides simple utilities for processing TimeSeries instances">
+<meta name="description" content="This module provides simple utilities for processing TimeSeries instances.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
@@ -36,7 +36,7 @@ el.replaceWith(d);
 <h1 class="title">Module <code>aqua_blue.utilities</code></h1>
 </header>
 <section id="section-intro">
-<p>This module provides simple utilities for processing TimeSeries instances</p>
+<p>This module provides simple utilities for processing TimeSeries instances.</p>
 </section>
 <section>
 </section>
@@ -141,27 +141,34 @@ Values between 1-1.5 are recommended for tasks that are memory dependent.</p></d
 </summary>
 <pre><code class="python">@dataclass
 class Normalizer:
-    
+
     &#34;&#34;&#34;
-    Normalizer class to normalize a time series to have zero mean and unit variance
+    A utility class for normalizing and denormalizing TimeSeries instances.
+
+    This class computes and stores the mean and standard deviation of the
+    dependent variable during normalization. These statistics are later used
+    to restore the original scale of the data when denormalizing.
     &#34;&#34;&#34;
     
     means: np.typing.NDArray[np.floating] = field(init=False)
+    &#34;&#34;&#34;Mean values of the dependent variable, computed during normalization.&#34;&#34;&#34;
+
     standard_deviations: np.typing.NDArray[np.floating] = field(init=False)
-    
+
+    &#34;&#34;&#34;Standard deviation values of the dependent variable, computed during normalization.&#34;&#34;&#34;
+
     def normalize(self, time_series: TimeSeries) -&gt; TimeSeries:
-        
         &#34;&#34;&#34;
-        Normalize the given TimeSeries instance
-        
+        Normalize a TimeSeries instance by adjusting its values to have zero mean and unit variance.
+
         Args:
-            time_series (TimeSeries): Time series to normalize
-        
+            time_series (TimeSeries): The time series to be normalized.
+
         Returns:
-            TimeSeries: The normalized time series
-        
+            TimeSeries: A new TimeSeries instance with normalized values.
+  
         Raises:
-            ValueError: If the normalizer has already been used
+            ValueError: If the normalizer has already been used, since it is intended for one-time use.
         &#34;&#34;&#34;
         
         if hasattr(self, &#34;means&#34;) or hasattr(self, &#34;standard_deviations&#34;):
@@ -180,40 +187,43 @@ class Normalizer:
         )
     
     def denormalize(self, time_series: TimeSeries) -&gt; TimeSeries:
-        
+
         &#34;&#34;&#34;
-        Denormalize the given TimeSeries instance. Means and standard deviations are grabbed
-        from a previous normalization
-        
+        Denormalize a previously normalized TimeSeries instance, restoring it to its original scale.
+
         Args:
             time_series (TimeSeries): Time series to denormalize
         
         Returns:
             TimeSeries: The denormalized time series
         
+
         Raises:
-            ValueError: If the normalizer has not yet been used
+            ValueError: If normalization has not been performed before calling this method.
         &#34;&#34;&#34;
         
         if not hasattr(self, &#34;means&#34;) or not hasattr(self, &#34;standard_deviations&#34;):
-            raise ValueError(&#34;You can only denormalize after normalizing a time series&#34;)
-        
+            raise ValueError(&#34;You can only denormalize after normalizing a time series.&#34;)
+  
         arr = time_series.dependent_variable
         arr = arr * self.standard_deviations
         arr = arr + self.means
         
         return TimeSeries(dependent_variable=arr, times=time_series.times)</code></pre>
 </details>
-<div class="desc"><p>Normalizer class to normalize a time series to have zero mean and unit variance</p></div>
+<div class="desc"><p>A utility class for normalizing and denormalizing TimeSeries instances.</p>
+<p>This class computes and stores the mean and standard deviation of the
+dependent variable during normalization. These statistics are later used
+to restore the original scale of the data when denormalizing.</p></div>
 <h3>Class variables</h3>
 <dl>
 <dt id="aqua_blue.utilities.Normalizer.means"><code class="name">var <span class="ident">means</span> : numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]]</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Mean values of the dependent variable, computed during normalization.</p></div>
 </dd>
 <dt id="aqua_blue.utilities.Normalizer.standard_deviations"><code class="name">var <span class="ident">standard_deviations</span> : numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]]</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Standard deviation values of the dependent variable, computed during normalization.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -227,32 +237,31 @@ class Normalizer:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def denormalize(self, time_series: TimeSeries) -&gt; TimeSeries:
-    
+
     &#34;&#34;&#34;
-    Denormalize the given TimeSeries instance. Means and standard deviations are grabbed
-    from a previous normalization
-    
+    Denormalize a previously normalized TimeSeries instance, restoring it to its original scale.
+
     Args:
         time_series (TimeSeries): Time series to denormalize
     
     Returns:
         TimeSeries: The denormalized time series
     
+
     Raises:
-        ValueError: If the normalizer has not yet been used
+        ValueError: If normalization has not been performed before calling this method.
     &#34;&#34;&#34;
     
     if not hasattr(self, &#34;means&#34;) or not hasattr(self, &#34;standard_deviations&#34;):
-        raise ValueError(&#34;You can only denormalize after normalizing a time series&#34;)
-    
+        raise ValueError(&#34;You can only denormalize after normalizing a time series.&#34;)
+
     arr = time_series.dependent_variable
     arr = arr * self.standard_deviations
     arr = arr + self.means
     
     return TimeSeries(dependent_variable=arr, times=time_series.times)</code></pre>
 </details>
-<div class="desc"><p>Denormalize the given TimeSeries instance. Means and standard deviations are grabbed
-from a previous normalization</p>
+<div class="desc"><p>Denormalize a previously normalized TimeSeries instance, restoring it to its original scale.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>time_series</code></strong> :&ensp;<code>TimeSeries</code></dt>
@@ -266,7 +275,7 @@ from a previous normalization</p>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>ValueError</code></dt>
-<dd>If the normalizer has not yet been used</dd>
+<dd>If normalization has not been performed before calling this method.</dd>
 </dl></div>
 </dd>
 <dt id="aqua_blue.utilities.Normalizer.normalize"><code class="name flex">
@@ -278,18 +287,17 @@ from a previous normalization</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def normalize(self, time_series: TimeSeries) -&gt; TimeSeries:
-    
     &#34;&#34;&#34;
-    Normalize the given TimeSeries instance
-    
+    Normalize a TimeSeries instance by adjusting its values to have zero mean and unit variance.
+
     Args:
-        time_series (TimeSeries): Time series to normalize
-    
+        time_series (TimeSeries): The time series to be normalized.
+
     Returns:
-        TimeSeries: The normalized time series
-    
+        TimeSeries: A new TimeSeries instance with normalized values.
+
     Raises:
-        ValueError: If the normalizer has already been used
+        ValueError: If the normalizer has already been used, since it is intended for one-time use.
     &#34;&#34;&#34;
     
     if hasattr(self, &#34;means&#34;) or hasattr(self, &#34;standard_deviations&#34;):
@@ -307,21 +315,21 @@ from a previous normalization</p>
         times=time_series.times
     )</code></pre>
 </details>
-<div class="desc"><p>Normalize the given TimeSeries instance</p>
+<div class="desc"><p>Normalize a TimeSeries instance by adjusting its values to have zero mean and unit variance.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>time_series</code></strong> :&ensp;<code>TimeSeries</code></dt>
-<dd>Time series to normalize</dd>
+<dd>The time series to be normalized.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>TimeSeries</code></dt>
-<dd>The normalized time series</dd>
+<dd>A new TimeSeries instance with normalized values.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>ValueError</code></dt>
-<dd>If the normalizer has already been used</dd>
+<dd>If the normalizer has already been used, since it is intended for one-time use.</dd>
 </dl></div>
 </dd>
 </dl>

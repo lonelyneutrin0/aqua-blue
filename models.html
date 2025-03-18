@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.5">
 <title>aqua_blue.models API documentation</title>
-<meta name="description" content="Module defining models, i.e. compositions of reservoir(s) and readout layers">
+<meta name="description" content="Module defining models, i.e., compositions of reservoir(s) and readout layers …">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
@@ -36,7 +36,15 @@ el.replaceWith(d);
 <h1 class="title">Module <code>aqua_blue.models</code></h1>
 </header>
 <section id="section-intro">
-<p>Module defining models, i.e. compositions of reservoir(s) and readout layers</p>
+<p>Module defining models, i.e., compositions of reservoir(s) and readout layers.</p>
+<p>This module implements the <code><a title="aqua_blue.models.Model" href="#aqua_blue.models.Model">Model</a></code> class, which integrates a reservoir and a readout
+layer to process time series data. The model enables training using input time series
+data and forecasting future values based on learned patterns.</p>
+<h2 id="classes">Classes</h2>
+<ul>
+<li>Model: Represents an Echo State Network (ESN)-based model that learns from
+input time series data and makes future predictions.</li>
+</ul>
 </section>
 <section>
 </section>
@@ -58,29 +66,50 @@ el.replaceWith(d);
 </summary>
 <pre><code class="python">@dataclass
 class Model:
-
     &#34;&#34;&#34;
-    Model class for training and predicting
+    A machine learning model that integrates a reservoir with a readout layer for
+    time series forecasting.
+
+    This class implements an Echo State Network (ESN) approach, where the reservoir
+    serves as a high-dimensional dynamic system, and the readout layer maps reservoir
+    states to output values.
+
+    Attributes:
+        reservoir (Reservoir):
+            The reservoir component, defining the input-to-reservoir mapping.
+        readout (Readout):
+            The readout layer, mapping reservoir states to output values.
+        final_time (float):
+            The last timestamp seen during training. This is set automatically after training.
+        timestep (float):
+            The fixed time interval between consecutive steps in the input time series,
+            set during training.
+        initial_guess (np.ndarray):
+            The last observed state of the system during training, used as an initial
+            condition for predictions.
+        tz (Union[datetime.tzinfo, None]):
+            The timezone associated with the time series. Set to `None` if the `DatetimeLikeArray`
+            is incompatible.
     &#34;&#34;&#34;
 
     reservoir: Reservoir
-    &#34;&#34;&#34;reservoir defining input -&gt; reservoir mapping&#34;&#34;&#34;
-    
+    &#34;&#34;&#34;The reservoir component that defines the input-to-reservoir mapping.&#34;&#34;&#34;
+
     readout: Readout
-    &#34;&#34;&#34;readout defining reservoir -&gt; output mapping&#34;&#34;&#34;
-    
+    &#34;&#34;&#34;The readout component that defines the reservoir-to-output mapping.&#34;&#34;&#34;
+
     final_time: float = field(init=False)
-    &#34;&#34;&#34;final time read during training. will be set at training&#34;&#34;&#34;
+    &#34;&#34;&#34;The final timestamp encountered in the training dataset (set during training).&#34;&#34;&#34;
 
     timestep: float = field(init=False)
-    &#34;&#34;&#34;timestep read during training. will be set at training&#34;&#34;&#34;
-    
+    &#34;&#34;&#34;The fixed time step interval of the training dataset (set during training).&#34;&#34;&#34;
+
     initial_guess: np.typing.NDArray[np.floating] = field(init=False)
-    &#34;&#34;&#34;initial guess read during training. will be set at training&#34;&#34;&#34;
+    &#34;&#34;&#34;The last observed state of the system, used for future predictions (set during training).&#34;&#34;&#34;
 
     tz: Union[datetime.tzinfo, None] = field(init=False)
-    &#34;&#34;&#34;timezone of the independent variable. Set to None if the DatetimeLikeArray is incompatible&#34;&#34;&#34;
-    
+    &#34;&#34;&#34;The timezone associated with the independent variable. Set to `None` if unsupported.&#34;&#34;&#34;
+
     def train(
         self,
         input_time_series: TimeSeries,
@@ -88,22 +117,34 @@ class Model:
         rcond: float = 1.0e-10
     ):
         &#34;&#34;&#34;
-        Training method for model
-        
+        Trains the model on the provided time series data.
+
+        This method fits the readout layer using reservoir states obtained from the
+        input time series data. A warmup period can be specified to exclude initial
+        steps from training.
+
         Args:
-            input_time_series: TimeSeries instance to train on
-            warmup: Number of initial steps to ignore in training
-            rcond: Threshold for pseudo-inverse calculation. Increase if prediction is unstable
+            input_time_series (TimeSeries):
+                The time series instance used for training.
+            warmup (int):
+                The number of initial steps to ignore in training (default: 0).
+            rcond (float):
+                The threshold for pseudo-inverse computation. Increase if predictions
+                become unstable (default: `1.0e-10`).
+
+        Raises:
+            ValueError: If `warmup` is greater than or equal to the number of timesteps
+                        in the input time series.
         &#34;&#34;&#34;
-        
         if warmup &gt;= len(input_time_series.times):
             raise ValueError(f&#34;warmup must be smaller than number of timesteps ({len(input_time_series)})&#34;)
-        
+
         time_series_array = input_time_series.dependent_variable
         independent_variables = np.zeros((time_series_array.shape[0]-1, self.reservoir.reservoir_dimensionality))
-        for i in range(independent_variables.shape[0]): 
+
+        for i in range(independent_variables.shape[0]):
             independent_variables[i] = self.reservoir.update_reservoir(time_series_array[i])
-        
+
         dependent_variables = time_series_array[1:]
         if warmup &gt; 0:
             independent_variables = independent_variables[warmup:]
@@ -115,20 +156,26 @@ class Model:
         self.tz = input_time_series.times.tz
         self.times_dtype = input_time_series.times.dtype
         self.initial_guess = time_series_array[-1, :]
-    
+
     def predict(self, horizon: int) -&gt; TimeSeries:
-        
         &#34;&#34;&#34;
-        Model prediction method
-        
+        Generates future predictions for a specified time horizon.
+
+        This method uses the trained model to generate future values based on the
+        learned dynamics of the input time series.
+
         Args:
-            horizon: number of steps to forecast into the future
+            horizon (int):
+                The number of steps to forecast into the future.
+
+        Returns:
+            TimeSeries: A `TimeSeries` instance containing the predicted values and
+            corresponding timestamps.
         &#34;&#34;&#34;
-        
         predictions = np.zeros((horizon, self.reservoir.input_dimensionality))
-        
+
         for i in range(horizon):
-            if i == 0: 
+            if i == 0:
                 predictions[i, :] = self.readout.reservoir_to_output(
                     self.reservoir.res_state
                 )
@@ -136,7 +183,7 @@ class Model:
             predictions[i, :] = self.readout.reservoir_to_output(
                 self.reservoir.update_reservoir(predictions[i-1, :])
             )
-        
+
         times_ = DatetimeLikeArray.from_array(
             np.arange(
                 start=self.final_time + self.timestep,
@@ -146,38 +193,58 @@ class Model:
             ),
             tz=self.tz,
         )
-        
+
         return TimeSeries(
             dependent_variable=predictions,
             times=times_
         )</code></pre>
 </details>
-<div class="desc"><p>Model class for training and predicting</p></div>
+<div class="desc"><p>A machine learning model that integrates a reservoir with a readout layer for
+time series forecasting.</p>
+<p>This class implements an Echo State Network (ESN) approach, where the reservoir
+serves as a high-dimensional dynamic system, and the readout layer maps reservoir
+states to output values.</p>
+<h2 id="attributes">Attributes</h2>
+<p>reservoir (Reservoir):
+The reservoir component, defining the input-to-reservoir mapping.
+readout (Readout):
+The readout layer, mapping reservoir states to output values.
+final_time (float):
+The last timestamp seen during training. This is set automatically after training.
+timestep (float):
+The fixed time interval between consecutive steps in the input time series,
+set during training.
+initial_guess (np.ndarray):
+The last observed state of the system during training, used as an initial
+condition for predictions.
+tz (Union[datetime.tzinfo, None]):
+The timezone associated with the time series. Set to <code>None</code> if the <code>DatetimeLikeArray</code>
+is incompatible.</p></div>
 <h3>Class variables</h3>
 <dl>
 <dt id="aqua_blue.models.Model.final_time"><code class="name">var <span class="ident">final_time</span> : float</code></dt>
 <dd>
-<div class="desc"><p>final time read during training. will be set at training</p></div>
+<div class="desc"><p>The final timestamp encountered in the training dataset (set during training).</p></div>
 </dd>
 <dt id="aqua_blue.models.Model.initial_guess"><code class="name">var <span class="ident">initial_guess</span> : numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]]</code></dt>
 <dd>
-<div class="desc"><p>initial guess read during training. will be set at training</p></div>
+<div class="desc"><p>The last observed state of the system, used for future predictions (set during training).</p></div>
 </dd>
 <dt id="aqua_blue.models.Model.readout"><code class="name">var <span class="ident">readout</span> : <a title="aqua_blue.readouts.Readout" href="readouts.html#aqua_blue.readouts.Readout">Readout</a></code></dt>
 <dd>
-<div class="desc"><p>readout defining reservoir -&gt; output mapping</p></div>
+<div class="desc"><p>The readout component that defines the reservoir-to-output mapping.</p></div>
 </dd>
 <dt id="aqua_blue.models.Model.reservoir"><code class="name">var <span class="ident">reservoir</span> : <a title="aqua_blue.reservoirs.Reservoir" href="reservoirs.html#aqua_blue.reservoirs.Reservoir">Reservoir</a></code></dt>
 <dd>
-<div class="desc"><p>reservoir defining input -&gt; reservoir mapping</p></div>
+<div class="desc"><p>The reservoir component that defines the input-to-reservoir mapping.</p></div>
 </dd>
 <dt id="aqua_blue.models.Model.timestep"><code class="name">var <span class="ident">timestep</span> : float</code></dt>
 <dd>
-<div class="desc"><p>timestep read during training. will be set at training</p></div>
+<div class="desc"><p>The fixed time step interval of the training dataset (set during training).</p></div>
 </dd>
 <dt id="aqua_blue.models.Model.tz"><code class="name">var <span class="ident">tz</span> : datetime.tzinfo | None</code></dt>
 <dd>
-<div class="desc"><p>timezone of the independent variable. Set to None if the DatetimeLikeArray is incompatible</p></div>
+<div class="desc"><p>The timezone associated with the independent variable. Set to <code>None</code> if unsupported.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -191,18 +258,24 @@ class Model:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def predict(self, horizon: int) -&gt; TimeSeries:
-    
     &#34;&#34;&#34;
-    Model prediction method
-    
+    Generates future predictions for a specified time horizon.
+
+    This method uses the trained model to generate future values based on the
+    learned dynamics of the input time series.
+
     Args:
-        horizon: number of steps to forecast into the future
+        horizon (int):
+            The number of steps to forecast into the future.
+
+    Returns:
+        TimeSeries: A `TimeSeries` instance containing the predicted values and
+        corresponding timestamps.
     &#34;&#34;&#34;
-    
     predictions = np.zeros((horizon, self.reservoir.input_dimensionality))
-    
+
     for i in range(horizon):
-        if i == 0: 
+        if i == 0:
             predictions[i, :] = self.readout.reservoir_to_output(
                 self.reservoir.res_state
             )
@@ -210,7 +283,7 @@ class Model:
         predictions[i, :] = self.readout.reservoir_to_output(
             self.reservoir.update_reservoir(predictions[i-1, :])
         )
-    
+
     times_ = DatetimeLikeArray.from_array(
         np.arange(
             start=self.final_time + self.timestep,
@@ -220,18 +293,24 @@ class Model:
         ),
         tz=self.tz,
     )
-    
+
     return TimeSeries(
         dependent_variable=predictions,
         times=times_
     )</code></pre>
 </details>
-<div class="desc"><p>Model prediction method</p>
+<div class="desc"><p>Generates future predictions for a specified time horizon.</p>
+<p>This method uses the trained model to generate future values based on the
+learned dynamics of the input time series.</p>
 <h2 id="args">Args</h2>
+<p>horizon (int):
+The number of steps to forecast into the future.</p>
+<h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>horizon</code></strong></dt>
-<dd>number of steps to forecast into the future</dd>
-</dl></div>
+<dt><code>TimeSeries</code></dt>
+<dd>A <code>TimeSeries</code> instance containing the predicted values and</dd>
+</dl>
+<p>corresponding timestamps.</p></div>
 </dd>
 <dt id="aqua_blue.models.Model.train"><code class="name flex">
 <span>def <span class="ident">train</span></span>(<span>self,<br>input_time_series: <a title="aqua_blue.time_series.TimeSeries" href="time_series.html#aqua_blue.time_series.TimeSeries">TimeSeries</a>,<br>warmup: int = 0,<br>rcond: float = 1e-10)</span>
@@ -248,22 +327,34 @@ class Model:
     rcond: float = 1.0e-10
 ):
     &#34;&#34;&#34;
-    Training method for model
-    
+    Trains the model on the provided time series data.
+
+    This method fits the readout layer using reservoir states obtained from the
+    input time series data. A warmup period can be specified to exclude initial
+    steps from training.
+
     Args:
-        input_time_series: TimeSeries instance to train on
-        warmup: Number of initial steps to ignore in training
-        rcond: Threshold for pseudo-inverse calculation. Increase if prediction is unstable
+        input_time_series (TimeSeries):
+            The time series instance used for training.
+        warmup (int):
+            The number of initial steps to ignore in training (default: 0).
+        rcond (float):
+            The threshold for pseudo-inverse computation. Increase if predictions
+            become unstable (default: `1.0e-10`).
+
+    Raises:
+        ValueError: If `warmup` is greater than or equal to the number of timesteps
+                    in the input time series.
     &#34;&#34;&#34;
-    
     if warmup &gt;= len(input_time_series.times):
         raise ValueError(f&#34;warmup must be smaller than number of timesteps ({len(input_time_series)})&#34;)
-    
+
     time_series_array = input_time_series.dependent_variable
     independent_variables = np.zeros((time_series_array.shape[0]-1, self.reservoir.reservoir_dimensionality))
-    for i in range(independent_variables.shape[0]): 
+
+    for i in range(independent_variables.shape[0]):
         independent_variables[i] = self.reservoir.update_reservoir(time_series_array[i])
-    
+
     dependent_variables = time_series_array[1:]
     if warmup &gt; 0:
         independent_variables = independent_variables[warmup:]
@@ -276,15 +367,23 @@ class Model:
     self.times_dtype = input_time_series.times.dtype
     self.initial_guess = time_series_array[-1, :]</code></pre>
 </details>
-<div class="desc"><p>Training method for model</p>
+<div class="desc"><p>Trains the model on the provided time series data.</p>
+<p>This method fits the readout layer using reservoir states obtained from the
+input time series data. A warmup period can be specified to exclude initial
+steps from training.</p>
 <h2 id="args">Args</h2>
+<p>input_time_series (TimeSeries):
+The time series instance used for training.
+warmup (int):
+The number of initial steps to ignore in training (default: 0).
+rcond (float):
+The threshold for pseudo-inverse computation. Increase if predictions
+become unstable (default: <code>1.0e-10</code>).</p>
+<h2 id="raises">Raises</h2>
 <dl>
-<dt><strong><code>input_time_series</code></strong></dt>
-<dd>TimeSeries instance to train on</dd>
-<dt><strong><code>warmup</code></strong></dt>
-<dd>Number of initial steps to ignore in training</dd>
-<dt><strong><code>rcond</code></strong></dt>
-<dd>Threshold for pseudo-inverse calculation. Increase if prediction is unstable</dd>
+<dt><code>ValueError</code></dt>
+<dd>If <code>warmup</code> is greater than or equal to the number of timesteps
+in the input time series.</dd>
 </dl></div>
 </dd>
 </dl>

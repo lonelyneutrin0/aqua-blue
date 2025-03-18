@@ -57,12 +57,11 @@ el.replaceWith(d);
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ShapeChangedWarning(Warning):
-    
     &#34;&#34;&#34;
-    warn the user that TimeSeries.__post_init__ changed the shape of the dependent variable
+    Warning for cases where TimeSeries.__post_init__ alters the shape of the dependent variable.
     &#34;&#34;&#34;</code></pre>
 </details>
-<div class="desc"><p>warn the user that TimeSeries.<strong>post_init</strong> changed the shape of the dependent variable</p></div>
+<div class="desc"><p>Warning for cases where TimeSeries.<strong>post_init</strong> alters the shape of the dependent variable.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>builtins.Warning</li>
@@ -81,20 +80,26 @@ el.replaceWith(d);
 </summary>
 <pre><code class="python">@dataclass
 class TimeSeries:
-
     &#34;&#34;&#34;
-    TimeSeries class defining a time series
+    A class representing a time series, encapsulating dependent variables and corresponding timestamps.
     &#34;&#34;&#34;
 
     dependent_variable: np.typing.NDArray[np.floating]
+    &#34;&#34;&#34;Array of dependent variables representing the time series values.&#34;&#34;&#34;
+
     times: DatetimeLikeArray
-    
+    &#34;&#34;&#34;Array of time values associated with the dependent variable.&#34;&#34;&#34;
+
     def __post_init__(self):
+        &#34;&#34;&#34;
+        Ensures proper formatting of time values and checks for uniform spacing.
+        Raises an error if the time values are not uniformly spaced.
+        &#34;&#34;&#34;
         # If List[float | int | datetime] is passed, convert to NDArray, NDArray, or DatetimeLikeArray respectively
         if isinstance(self.times[0], datetime):
             # For some reason, NumPy does not automatically handle datetime object dtypes as np.datetime64.
             dtype_ = &#39;datetime64[s]&#39;
-        else: 
+        else:
             dtype_ = np.dtype(type(self.times[0]))
 
         self.times = DatetimeLikeArray(self.times, dtype=dtype_)
@@ -104,30 +109,23 @@ class TimeSeries:
             raise ValueError(&#34;TimeSeries.times must be uniformly spaced&#34;)
         if np.isclose(np.mean(timesteps.astype(float)), 0.0):
             raise ValueError(&#34;TimeSeries.times must have a timestep greater than zero&#34;)
-        
+
         if len(self.dependent_variable.shape) == 1:
             num_steps = len(self.dependent_variable)
             self.dependent_variable = self.dependent_variable.reshape(num_steps, 1)
             warnings.warn(
                 f&#34;TimeSeries.dependent_variable should have shape (number of steps, dimensionality). &#34;
-                f&#34;The shape has been changed from {(num_steps,)} to {self.dependent_variable.shape}&#34;
+                f&#34;The shape has been changed from {(num_steps,)} to {self.dependent_variable.shape}&#34;,
             )
 
     def save(self, fp: Union[IO, str, Path], header: str = &#34;&#34;, delimiter=&#34;,&#34;):
-
         &#34;&#34;&#34;
-        Method to save a time series
+        Saves the time series data to a file.
 
         Args:
-            fp (Union[IO, str, Path]):
-                The file-like object, path name, or Path in which to save the TimeSeries instance
-
-            header (str):
-                An optional header. Defaults to the empty string
-
-            delimiter (str):
-                The delimiting character in the save file. Defaults to a comma
-
+            fp (Union[IO, str, Path]): File path or object where the TimeSeries instance will be saved.
+            header (str, optional): An optional header. Defaults to an empty string.
+            delimiter (str, optional): The delimiter used in the output file. Defaults to a comma.
         &#34;&#34;&#34;
         # This should work just fine as long as we are writing datetime objects in UTC.
 
@@ -141,36 +139,27 @@ class TimeSeries:
 
     @property
     def num_dims(self) -&gt; int:
-
         &#34;&#34;&#34;
-        The dimensionality of the time series
+        Returns the dimensionality of the dependent variable.
 
         Returns:
-            int: The dimensionality of the time series
+            int: Number of dimensions of the time series.
         &#34;&#34;&#34;
-
         return self.dependent_variable.shape[1]
 
     @classmethod
     def from_csv(cls, fp: Union[IO, str, Path], tz: Union[ZoneInfo, None] = None, time_index: int = 0):
-
         &#34;&#34;&#34;
-        Method for loading in a TimeSeries instance from a comma-separated value (csv) file
+        Loads time series data from a CSV file.
 
         Args:
-            fp (Union[IO, str, Path]):
-                The file-like object, path name, or Path in which to read
-            
-            time_index (int):
-                The column index corresponding to the time column. Defaults to 0
+            fp (Union[IO, str, Path]): File path or object to read from.
+            time_index (int, optional): Column index corresponding to time values. Defaults to 0.
+            tz (ZoneInfo, optional): Timezone to apply to the time data. Defaults to None.
 
-            tz (ZoneInfo):
-                The timezone to read the datetime data in
-        
         Returns:
-            TimeSeries: A TimeSeries instance populated by data from the csv file
+            TimeSeries: A TimeSeries instance populated by data from the csv file.
         &#34;&#34;&#34;
-        
         data = np.loadtxt(fp, delimiter=&#34;,&#34;)
         times_ = data[:, time_index]
         return TimeSeries(
@@ -180,86 +169,96 @@ class TimeSeries:
 
     @property
     def timestep(self) -&gt; float:
-
         &#34;&#34;&#34;
-        The physical timestep of the time series
+        Returns the time step between consecutive observations.
 
         Returns:
-            int: The physical timestep of the time series
+            float: The timestep of the time series.
         &#34;&#34;&#34;
-
         return self.times[1] - self.times[0]
-    
+
     def __eq__(self, other) -&gt; bool:
+        &#34;&#34;&#34;
+        Checks equality between two TimeSeries instances.
+
+        Returns:
+            bool: True if both instances have the same times and dependent variables.
+        &#34;&#34;&#34;
         return self.times == other.times and bool(np.all(np.isclose(self.dependent_variable, other.dependent_variable)))
-        
+
     def __getitem__(self, key):
-        
+        &#34;&#34;&#34;
+        Retrieves a subset of the TimeSeries.
+        &#34;&#34;&#34;
         return TimeSeries(self.dependent_variable[key], self.times[key])
 
     def __setitem__(self, key, value):
-
+        &#34;&#34;&#34;
+        Sets a subset of the TimeSeries.
+        &#34;&#34;&#34;
         if not isinstance(value, TimeSeries):
             raise TypeError(&#34;Value must be a TimeSeries object&#34;)
         if isinstance(key, slice) and key.stop &gt; len(self.dependent_variable):
             raise ValueError(&#34;Slice stop index out of range&#34;)
         if isinstance(key, int) and key &gt;= len(self.dependent_variable):
             raise ValueError(&#34;Index out of range&#34;)
-
         self.dependent_variable[key] = value.dependent_variable
         self.times[key] = value.times
 
     def __add__(self, other):
-
+        &#34;&#34;&#34;
+        Adds two TimeSeries instances element-wise.
+        &#34;&#34;&#34;
         if not len(self.times) == len(other.times):
-            raise ValueError(&#34;can only add TimeSeries instances that have the same number of timesteps&#34;)
-
+            raise ValueError(&#34;Can only add TimeSeries instances that have the same number of timesteps&#34;)
         if not np.all(self.times == other.times):
-            raise ValueError(&#34;can only add TimeSeries instances that span the same times&#34;)
-
+            raise ValueError(&#34;Can only add TimeSeries instances that span the same times&#34;)
         return TimeSeries(
             dependent_variable=self.dependent_variable + other.dependent_variable,
             times=self.times
         )
 
     def __sub__(self, other):
-
+        &#34;&#34;&#34;
+        Subtracts two TimeSeries instances element-wise.
+        &#34;&#34;&#34;
         if not len(self.times) == len(other.times):
-            raise ValueError(&#34;can only subtract TimeSeries instances that have the same number of timesteps&#34;)
-
+            raise ValueError(&#34;Can only subtract TimeSeries instances that have the same number of timesteps&#34;)
         if not np.all(self.times == other.times):
-            raise ValueError(&#34;can only subtract TimeSeries instances that span the same times&#34;)
-
+            raise ValueError(&#34;Can only subtract TimeSeries instances that span the same times&#34;)
         return TimeSeries(
             dependent_variable=self.dependent_variable - other.dependent_variable,
             times=self.times
         )
 
     def __rshift__(self, other):
-
+        &#34;&#34;&#34;
+        Concatenates two non-overlapping TimeSeries instances.
+        &#34;&#34;&#34;
         if self.times[-1] &gt;= other.times[0]:
             print(self.times[-1], other.times[0])
-            raise ValueError(&#34;can only concatenate TimeSeries instances with non-overlapping time values&#34;)
-
+            raise ValueError(&#34;Can only concatenate TimeSeries instances with non-overlapping time values&#34;)
         return TimeSeries(
             dependent_variable=np.vstack((self.dependent_variable, other.dependent_variable)),
             times=np.concatenate((self.times, other.times))
         )
 
     def __len__(self):
-        
+        &#34;&#34;&#34;
+        Returns the number of timesteps in the TimeSeries.
+        &#34;&#34;&#34;
         return len(self.times)</code></pre>
 </details>
-<div class="desc"><p>TimeSeries class defining a time series</p></div>
+<div class="desc"><p>A class representing a time series, encapsulating dependent variables and corresponding timestamps.</p></div>
 <h3>Class variables</h3>
 <dl>
 <dt id="aqua_blue.time_series.TimeSeries.dependent_variable"><code class="name">var <span class="ident">dependent_variable</span> : numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]]</code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Array of dependent variables representing the time series values.</p></div>
 </dd>
 <dt id="aqua_blue.time_series.TimeSeries.times"><code class="name">var <span class="ident">times</span> : <a title="aqua_blue.datetimelikearray.DatetimeLikeArray" href="datetimelikearray.html#aqua_blue.datetimelikearray.DatetimeLikeArray">DatetimeLikeArray</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Array of time values associated with the dependent variable.</p></div>
 </dd>
 </dl>
 <h3>Static methods</h3>
@@ -268,18 +267,20 @@ class TimeSeries:
 <span>def <span class="ident">from_csv</span></span>(<span>fp: <class 'IO'> | str | pathlib.Path,<br>tz: zoneinfo.ZoneInfo | None = None,<br>time_index: int = 0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Method for loading in a TimeSeries instance from a comma-separated value (csv) file</p>
+<div class="desc"><p>Loads time series data from a CSV file.</p>
 <h2 id="args">Args</h2>
-<p>fp (Union[IO, str, Path]):
-The file-like object, path name, or Path in which to read</p>
-<p>time_index (int):
-The column index corresponding to the time column. Defaults to 0</p>
-<p>tz (ZoneInfo):
-The timezone to read the datetime data in</p>
+<dl>
+<dt><strong><code>fp</code></strong> :&ensp;<code>Union[IO, str, Path]</code></dt>
+<dd>File path or object to read from.</dd>
+<dt><strong><code>time_index</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>Column index corresponding to time values. Defaults to 0.</dd>
+<dt><strong><code>tz</code></strong> :&ensp;<code>ZoneInfo</code>, optional</dt>
+<dd>Timezone to apply to the time data. Defaults to None.</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code><a title="aqua_blue.time_series.TimeSeries" href="#aqua_blue.time_series.TimeSeries">TimeSeries</a></code></dt>
-<dd>A TimeSeries instance populated by data from the csv file</dd>
+<dd>A TimeSeries instance populated by data from the csv file.</dd>
 </dl></div>
 </dd>
 </dl>
@@ -293,21 +294,19 @@ The timezone to read the datetime data in</p>
 </summary>
 <pre><code class="python">@property
 def num_dims(self) -&gt; int:
-
     &#34;&#34;&#34;
-    The dimensionality of the time series
+    Returns the dimensionality of the dependent variable.
 
     Returns:
-        int: The dimensionality of the time series
+        int: Number of dimensions of the time series.
     &#34;&#34;&#34;
-
     return self.dependent_variable.shape[1]</code></pre>
 </details>
-<div class="desc"><p>The dimensionality of the time series</p>
+<div class="desc"><p>Returns the dimensionality of the dependent variable.</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code>int</code></dt>
-<dd>The dimensionality of the time series</dd>
+<dd>Number of dimensions of the time series.</dd>
 </dl></div>
 </dd>
 <dt id="aqua_blue.time_series.TimeSeries.timestep"><code class="name">prop <span class="ident">timestep</span> : float</code></dt>
@@ -318,21 +317,19 @@ def num_dims(self) -&gt; int:
 </summary>
 <pre><code class="python">@property
 def timestep(self) -&gt; float:
-
     &#34;&#34;&#34;
-    The physical timestep of the time series
+    Returns the time step between consecutive observations.
 
     Returns:
-        int: The physical timestep of the time series
+        float: The timestep of the time series.
     &#34;&#34;&#34;
-
     return self.times[1] - self.times[0]</code></pre>
 </details>
-<div class="desc"><p>The physical timestep of the time series</p>
+<div class="desc"><p>Returns the time step between consecutive observations.</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>int</code></dt>
-<dd>The physical timestep of the time series</dd>
+<dt><code>float</code></dt>
+<dd>The timestep of the time series.</dd>
 </dl></div>
 </dd>
 </dl>
@@ -347,20 +344,13 @@ def timestep(self) -&gt; float:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def save(self, fp: Union[IO, str, Path], header: str = &#34;&#34;, delimiter=&#34;,&#34;):
-
     &#34;&#34;&#34;
-    Method to save a time series
+    Saves the time series data to a file.
 
     Args:
-        fp (Union[IO, str, Path]):
-            The file-like object, path name, or Path in which to save the TimeSeries instance
-
-        header (str):
-            An optional header. Defaults to the empty string
-
-        delimiter (str):
-            The delimiting character in the save file. Defaults to a comma
-
+        fp (Union[IO, str, Path]): File path or object where the TimeSeries instance will be saved.
+        header (str, optional): An optional header. Defaults to an empty string.
+        delimiter (str, optional): The delimiter used in the output file. Defaults to a comma.
     &#34;&#34;&#34;
     # This should work just fine as long as we are writing datetime objects in UTC.
 
@@ -372,14 +362,16 @@ def timestep(self) -&gt; float:
         comments=&#34;&#34;
     )</code></pre>
 </details>
-<div class="desc"><p>Method to save a time series</p>
+<div class="desc"><p>Saves the time series data to a file.</p>
 <h2 id="args">Args</h2>
-<p>fp (Union[IO, str, Path]):
-The file-like object, path name, or Path in which to save the TimeSeries instance</p>
-<p>header (str):
-An optional header. Defaults to the empty string</p>
-<p>delimiter (str):
-The delimiting character in the save file. Defaults to a comma</p></div>
+<dl>
+<dt><strong><code>fp</code></strong> :&ensp;<code>Union[IO, str, Path]</code></dt>
+<dd>File path or object where the TimeSeries instance will be saved.</dd>
+<dt><strong><code>header</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>An optional header. Defaults to an empty string.</dd>
+<dt><strong><code>delimiter</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The delimiter used in the output file. Defaults to a comma.</dd>
+</dl></div>
 </dd>
 </dl>
 </dd>
