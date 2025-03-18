@@ -46,7 +46,7 @@ el.replaceWith(d);
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="aqua_blue.utilities.make_sparse"><code class="name flex">
-<span>def <span class="ident">make_sparse</span></span>(<span>weight_matrix: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]],<br>sparsity: float) ‑> numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]]</span>
+<span>def <span class="ident">make_sparse</span></span>(<span>weight_matrix: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]],<br>sparsity: float,<br>generator: numpy.random._generator.Generator | None = None) ‑> numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]]</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -55,7 +55,8 @@ el.replaceWith(d);
 </summary>
 <pre><code class="python">def make_sparse(
     weight_matrix: np.typing.NDArray[np.floating], 
-    sparsity: float
+    sparsity: float,
+    generator: Optional[np.random.Generator]=None
 ) -&gt; np.typing.NDArray[np.floating]:
     &#34;&#34;&#34;
     Make a weight matrix sparse 
@@ -67,16 +68,25 @@ el.replaceWith(d);
     
     sparsity: float 
         Extent of how sparse to make the weight matrix. Ranges from 0 to 1.
-    &#34;&#34;&#34;
     
-    return weight_matrix * (np.random.rand(*weight_matrix.shape) &lt; sparsity)</code></pre>
+    generator: np.random.Generator
+        NumPy Generator to create random numbers
+    &#34;&#34;&#34;
+
+    if not generator:
+        generator = np.random.default_rng(seed=0)
+
+    mask = generator.random(*weight_matrix) &lt; sparsity 
+    return weight_matrix * mask</code></pre>
 </details>
 <div class="desc"><p>Make a weight matrix sparse </p>
 <p>Params: </p>
 <p>weight_matrix: np.typing.NDArray[np.floating]
 Weight matrix to be made sparse</p>
 <p>sparsity: float
-Extent of how sparse to make the weight matrix. Ranges from 0 to 1.</p></div>
+Extent of how sparse to make the weight matrix. Ranges from 0 to 1.</p>
+<p>generator: np.random.Generator
+NumPy Generator to create random numbers</p></div>
 </dd>
 <dt id="aqua_blue.utilities.set_spectral"><code class="name flex">
 <span>def <span class="ident">set_spectral</span></span>(<span>weight_matrix: numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]],<br>spectral_radius: float) ‑> numpy.ndarray[typing.Any, numpy.dtype[numpy.floating]]</span>
@@ -131,46 +141,46 @@ Values between 1-1.5 are recommended for takes that are memory dependent.</p></d
 </summary>
 <pre><code class="python">@dataclass
 class Normalizer:
-
+    
     &#34;&#34;&#34;
     Normalizer class to normalize a time series to have zero mean and unit variance
     &#34;&#34;&#34;
-
+    
     means: np.typing.NDArray[np.floating] = field(init=False)
     standard_deviations: np.typing.NDArray[np.floating] = field(init=False)
-
+    
     def normalize(self, time_series: TimeSeries) -&gt; TimeSeries:
-
+        
         &#34;&#34;&#34;
         Normalize the given TimeSeries instance
-
+        
         Args:
             time_series (TimeSeries): Time series to normalize
-
+        
         Returns:
             TimeSeries: The normalized time series
-
+        
         Raises:
             ValueError: If the normalizer has already been used
         &#34;&#34;&#34;
-
+        
         if hasattr(self, &#34;means&#34;) or hasattr(self, &#34;standard_deviations&#34;):
             raise ValueError(&#34;You can only use the Normalizer once. Create a new instance to normalize again&#34;)
-
+        
         arr = time_series.dependent_variable
         self.means = arr.mean(axis=0)
         self.standard_deviations = arr.std(axis=0)
-
+        
         arr = arr - self.means
         arr = arr / self.standard_deviations
-
+        
         return TimeSeries(
             dependent_variable=arr,
             times=time_series.times
         )
-
+    
     def denormalize(self, time_series: TimeSeries) -&gt; TimeSeries:
-
+        
         &#34;&#34;&#34;
         Denormalize the given TimeSeries instance. Means and standard deviations are grabbed
         from a previous normalization
@@ -217,7 +227,7 @@ class Normalizer:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def denormalize(self, time_series: TimeSeries) -&gt; TimeSeries:
-
+    
     &#34;&#34;&#34;
     Denormalize the given TimeSeries instance. Means and standard deviations are grabbed
     from a previous normalization
@@ -268,30 +278,30 @@ from a previous normalization</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def normalize(self, time_series: TimeSeries) -&gt; TimeSeries:
-
+    
     &#34;&#34;&#34;
     Normalize the given TimeSeries instance
-
+    
     Args:
         time_series (TimeSeries): Time series to normalize
-
+    
     Returns:
         TimeSeries: The normalized time series
-
+    
     Raises:
         ValueError: If the normalizer has already been used
     &#34;&#34;&#34;
-
+    
     if hasattr(self, &#34;means&#34;) or hasattr(self, &#34;standard_deviations&#34;):
         raise ValueError(&#34;You can only use the Normalizer once. Create a new instance to normalize again&#34;)
-
+    
     arr = time_series.dependent_variable
     self.means = arr.mean(axis=0)
     self.standard_deviations = arr.std(axis=0)
-
+    
     arr = arr - self.means
     arr = arr / self.standard_deviations
-
+    
     return TimeSeries(
         dependent_variable=arr,
         times=time_series.times
