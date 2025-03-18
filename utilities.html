@@ -72,11 +72,11 @@ el.replaceWith(d);
     generator: np.random.Generator
         NumPy Generator to create random numbers
     &#34;&#34;&#34;
-
+    
     if not generator:
         generator = np.random.default_rng(seed=0)
-
-    mask = generator.random(*weight_matrix) &lt; sparsity 
+    
+    mask = generator.random(weight_matrix.shape) &lt; sparsity 
     return weight_matrix * mask</code></pre>
 </details>
 <div class="desc"><p>Make a weight matrix sparse </p>
