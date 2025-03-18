@@ -70,7 +70,7 @@ class Reservoir(ABC):
 @dataclass
 class DynamicalReservoir(Reservoir):
     
-    """
+    r"""
     A dynamical reservoir with tunable properties.
 
     This reservoir is defined by the equation:
@@ -129,7 +129,7 @@ class DynamicalReservoir(Reservoir):
     """
 
     leaking_rate: float = 1.0
-    """ 
+    r""" 
     Leaking rate (\(\alpha\)) that controls how much of the previous state contributes to the next.
     Defaults to `1.0`, meaning the state is fully updated at each time step.
     """
@@ -181,7 +181,7 @@ class DynamicalReservoir(Reservoir):
 
     def update_reservoir(self, input_state: np.typing.NDArray[np.floating]) -> np.typing.NDArray[np.floating]:
 
-        """
+        r"""
         Updates the reservoir state given an input.
 
         This method applies the state update equation:
