@@ -138,7 +138,7 @@ jobs:
           pip install .[dev]
       - name: Build pdoc documentation
         run: >-
-          pdoc -d google aqua_blue/ -o _build --math
+          pdoc -d google aqua_blue/ -o _build --math --logo "https://raw.githubusercontent.com/Chicago-Club-Management-Company/aqua-blue/refs/heads/main/assets/blue.jpg" --favicon "https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f30a.png"
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

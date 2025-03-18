@@ -1,4 +1,8 @@
-__version__ = "0.2.2"
+"""
+.. include:: ../README.md
+"""
+
+__version__ = "0.2.3"
 __authors__ = [
     "Jacob Jeffries",
     "Hrishikesh Belagali",
@@ -9,10 +13,10 @@ __authors__ = [
 
 __author_emails__ = [
     "jacob.jeffries@ccmc.global",
-    "ameen.mahmood@ccmc.global",
+    "hrishikesh.belagali@ccmc.global",
     "avik.thumati@ccmc.global",
-    "samuel.josephs@ccmc.global",
-    "hrishikesh.belagali@ccmc.global"
+    "ameen.mahmood@ccmc.global",
+    "samuel.josephs@ccmc.global"
 ]
 __url__ = "https://github.com/Chicago-Club-Management-Company/aqua-blue"
 
