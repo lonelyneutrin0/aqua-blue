@@ -2,7 +2,7 @@
 Module defining the TimeSeries object
 """
 
-from typing import IO, Union, Generic, TypedDict, List
+from typing import IO, Union, Generic, TypedDict, Sequence
 from pathlib import Path
 import warnings
 
@@ -26,8 +26,8 @@ class TimeSeriesTypedDict(TypedDict):
     TypedDict form of a TimeSeries object, useful for turning into json
     """
 
-    dependent_variable: List[List[float]]
-    times: List[Union[float, str]]
+    dependent_variable: Sequence[Sequence[float]]
+    times: Sequence[Union[float, str]]
 
 
 @dataclass
