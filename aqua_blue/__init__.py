@@ -1,8 +1,27 @@
 """
 .. include:: ../README.md
+
+# Examples
+
+## Basic Lotka-Volterra example
+
+```py
+.. include:: ../examples/lotka-volterra.py
+```
+
+## Using datetime objects
+
+```py
+.. include:: ../examples/sine-cosine.py
+```
+
+## Load and output a JSON string
+```py
+.. include:: ../examples/json_example.py
+```
 """
 
-__version__ = "0.2.5"
+__version__ = "0.2.6"
 __authors__ = [
     "Jacob Jeffries",
     "Hrishikesh Belagali",
