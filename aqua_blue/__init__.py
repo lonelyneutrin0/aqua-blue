@@ -11,7 +11,7 @@ Below is an example of using `aqua-blue` to predict the predator-prey
 $$ \dot x = \alpha x - \beta xy $$
 $$ \dot y = -\gamma y + \delta xy$$
 
-with parameters $\beta = 0.02$, $\gamma = 0.3$, and $\delta = 0.01$, and initial conditions
+with parameters $\alpha = 0.1$, $\beta = 0.02$, $\gamma = 0.3$, and $\delta = 0.01$, and initial conditions
 $(x_0, y_0) = (20, 9)$. We train a reservoir computer with a reservoir dimensionality of $1000$ over $0\leq t\leq 10$,
 with $1000$ timesteps. Then, we predict the next $1000$ timesteps.
 
@@ -61,7 +61,7 @@ Here, we use both hyperbolic tangent (`tanh`) and the [error function](https://e
 ```
 """
 
-__version__ = "0.2.9"
+__version__ = "0.2.10"
 __authors__ = [
     "Jacob Jeffries",
     "Hrishikesh Belagali",
