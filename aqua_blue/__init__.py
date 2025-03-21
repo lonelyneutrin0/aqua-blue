@@ -38,9 +38,30 @@ prediction. This is particularly useful for interfacing `aqua-blue` with already
 ```py
 .. include:: ../examples/json_example.py
 ```
+
+## 🏋 Explicit weights
+
+Below is an example of generating explicit matrices for $W_\text{in}$ and $W_\text{res}$. Here, `sparsity=0.99` and
+`spectral_radius=1.2` respectively zero-out $99\%$ of $W_\text{res}$'s elements and force $W_\text{res}$ to have a
+[spectral radius](https://en.wikipedia.org/wiki/Spectral_radius) of $1.2$. We also showcase the `>>` operator, which
+concatenates instances of `aqua_blue.time_series.TimeSeries`.
+
+```py
+.. include:: ../examples/explicit-weights.py
+```
+
+## 📈 Explicit activation function
+
+Below is an example of using a different activation function to map from the input state to the reservoir.
+Here, we use both hyperbolic tangent (`tanh`) and the [error function](https://en.wikipedia.org/wiki/Error_function)
+(`erf`), and compare the results.
+
+```py
+.. include:: ../examples/activation-functions.py
+```
 """
 
-__version__ = "0.2.8"
+__version__ = "0.2.9"
 __authors__ = [
     "Jacob Jeffries",
     "Hrishikesh Belagali",
