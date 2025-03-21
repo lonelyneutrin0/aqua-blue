@@ -5,9 +5,18 @@ r"""
 
 ## 🐇 Basic Lotka-Volterra example
 
-Below is an example of using `aqua-blue` to predict the Lotka-Volterra equations with initial parameters $\beta = 0.02$,
-$\gamma = 0.3$, and $\delta = 0.01$, and initial parameters $(x_0, y_0) = (20, 9)$. We train a reservoir computer
-with a dimensionality of $1000$ over $0\leq t\leq 10$, with $1000$ timesteps.
+Below is an example of using `aqua-blue` to predict the predator-prey
+[Lotka-Volterra equations](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations):
+
+$$ \dot x = \alpha x - \beta xy $$
+$$ \dot y = -\gamma y + \delta xy$$
+
+with parameters $\beta = 0.02$, $\gamma = 0.3$, and $\delta = 0.01$, and initial conditions
+$(x_0, y_0) = (20, 9)$. We train a reservoir computer with a reservoir dimensionality of $1000$ over $0\leq t\leq 10$,
+with $1000$ timesteps. Then, we predict the next $1000$ timesteps.
+
+Here, we use `scipy.integrate.solve_ivp` to integrate the system of differential equations.
+
 
 ```py
 .. include:: ../examples/lotka-volterra.py
@@ -15,7 +24,7 @@ with a dimensionality of $1000$ over $0\leq t\leq 10$, with $1000$ timesteps.
 
 ## 🕓 Using datetime objects
 
-Below is an example of a simple sine-cosine task similar to above, using `datetime.datetime` objects as `times`.
+Below is an example of a simple sine-cosine task similar to above, using `datetime.datetime` objects as times.
 
 ```py
 .. include:: ../examples/sine-cosine.py
@@ -31,7 +40,7 @@ prediction. This is particularly useful for interfacing `aqua-blue` with already
 ```
 """
 
-__version__ = "0.2.7"
+__version__ = "0.2.8"
 __authors__ = [
     "Jacob Jeffries",
     "Hrishikesh Belagali",
@@ -39,7 +48,6 @@ __authors__ = [
     "Ameen Mahmood",
     "Samuel Josephs",
 ]
-
 __author_emails__ = [
     "jacob.jeffries@ccmc.global",
     "hrishikesh.belagali@ccmc.global",
