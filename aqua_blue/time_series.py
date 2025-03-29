@@ -2,9 +2,10 @@
 Module defining the TimeSeries object
 """
 
-from typing import IO, Union, Generic, TypedDict, Sequence
+from typing import IO, Union, Generic, TypedDict, Sequence, List
 from pathlib import Path
 import warnings
+import io 
 
 from dataclasses import dataclass
 import numpy as np
@@ -111,6 +112,7 @@ class TimeSeries(Generic[TimeDeltaLike]):
         Args:
             fp (Union[IO, str, Path]): File path or object to read from.
             times_dtype (dtype): Type of times column.
+            times_dtype (dtype): Type of times column.
             time_index (int, optional): Column index corresponding to time values. Defaults to 0.
             tz (ZoneInfo, optional): Timezone to apply to the time data. Defaults to None.
 
@@ -120,21 +122,34 @@ class TimeSeries(Generic[TimeDeltaLike]):
         
         # Get the number of columns
         data = np.genfromtxt(fp, delimiter=",", dtype=None)
-        cols = data.dtype.names
         
-        # # Take out the times data from genfromtxt call 
-        times_ = data[:][cols[time_index]]
+        cols : List[Union[int, str]]
+
+        if isinstance(data[0], np.void) and data.dtype.names: 
+            cols = list(data.dtype.names) 
+            times_ = data[:][cols[time_index]]
+        else: 
+            cols = [i for i in range(data.shape[1])]
+            times_ = data[:, time_index]
+        
+        if isinstance(fp, io.IOBase):
+            fp.seek(0)
         
         # Get the dependent variables 
         var_indices = [i for i in range(0, len(cols)) if i != time_index] 
         dependent = np.loadtxt(fp, delimiter=',', usecols=var_indices)
         
         if isinstance(times_[0], str):
-            times_ = [parser.parse(i).replace(tzinfo=tz) for i in times_]
+            datetimes_ : List[datetime] = [parser.parse(i).replace(tzinfo=tz) for i in times_]
+        
+            return TimeSeries(
+                dependent_variable=dependent,
+                times=DatetimeLikeArray(datetimes_, dtype=times_dtype)
+            )
         
         return TimeSeries(
             dependent_variable=dependent,
-            times=DatetimeLikeArray(times_, dtype=times_dtype)
+            times=DatetimeLikeArray.from_array(times_)
         )
 
     def to_dict(self) -> TimeSeriesTypedDict:
@@ -161,7 +176,7 @@ class TimeSeries(Generic[TimeDeltaLike]):
     def __eq__(self, other) -> bool:
         """
         Checks equality between two TimeSeries instances.
-
+        
         Returns:
             bool: True if both instances have the same times and dependent variables.
         """
@@ -198,7 +213,7 @@ class TimeSeries(Generic[TimeDeltaLike]):
             dependent_variable=self.dependent_variable + other.dependent_variable,
             times=self.times
         )
-
+    
     def __sub__(self, other):
         """
         Subtracts two TimeSeries instances element-wise.
