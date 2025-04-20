@@ -115,7 +115,7 @@ For my favorite video about logging in Python, see a wonderful video below by [m
 
 """
 
-__version__ = "0.2.16"
+__version__ = "0.2.17"
 __authors__ = [
     "Jacob Jeffries",
     "Hrishikesh Belagali",
