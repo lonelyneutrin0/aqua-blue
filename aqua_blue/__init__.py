@@ -78,6 +78,41 @@ The predictions are written to a new csv file (`predicted-goldstocks.csv`).
 ```py
 .. include:: ../examples/csv-example.py
 ```
+
+## 🕵️ Logging
+
+`aqua-blue` utilizes the native `logging` library to do some additional logging. An example of this is below:
+
+```py
+.. include:: ../examples/logging-example.py
+```
+
+which prints:
+
+```
+INFO:root:times dtype set to float64
+INFO:root:times dtype set to float64
+DEBUG:root:DynamicalReservoir.w_res sparsity set to 50.67%
+DEBUG:root:DynamicalReservoir.w_res spectral radius set to 4.7707258199919655
+INFO:root:LinearReadout layer trained. Inaccuracy = 5.025374978118052e-09 and pcc = 1.0
+DEBUG:root:Model.timestep set to 0.01
+DEBUG:root:Model.final_time set to 49.99
+DEBUG:root:Model.tz set to None
+DEBUG:root:Model.times_detype set to float64
+```
+
+For my favorite video about logging in Python, see a wonderful video below by [mCoding](https://mcoding.io/):
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: auto;">
+  <iframe src="https://www.youtube-nocookie.com/embed/9L77QExPmI0?si=JE-GParvVMRGA-by"
+          style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen
+          title="YouTube video player">
+  </iframe>
+</div>
+
 """
 
 __version__ = "0.2.16"
