@@ -35,7 +35,7 @@ jobs:
           coverage run -m pytest -W error
       - name: Create code coverage report
         run: >-
-          coverage json --include aqua_blue/*.py
+          coverage json
       - name: Print out code coverage percent
         run: >-
           echo "Coverage: $(jq '.totals.percent_covered' coverage.json)%"
