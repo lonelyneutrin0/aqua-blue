@@ -78,6 +78,32 @@ The predictions are written to a new csv file (`predicted-goldstocks.csv`).
 ```py
 .. include:: ../examples/csv-example.py
 ```
+
+## 🕵️ Logging
+
+`aqua-blue` utilizes the native `logging` library to do some additional logging. An example of this is below:
+
+```py
+.. include:: ../examples/logging-example.py
+```
+
+which prints:
+
+```
+INFO:root:times dtype set to float64
+INFO:root:times dtype set to float64
+DEBUG:root:DynamicalReservoir.w_res sparsity set to 50.67%
+DEBUG:root:DynamicalReservoir.w_res spectral radius set to 4.7707258199919655
+INFO:root:LinearReadout layer trained. Inaccuracy = 5.025374978118052e-09 and pcc = 1.0
+DEBUG:root:Model.timestep set to 0.01
+DEBUG:root:Model.final_time set to 49.99
+DEBUG:root:Model.tz set to None
+DEBUG:root:Model.times_detype set to float64
+```
+
+For my favorite video about logging in Python, see a wonderful video below my mCoding:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/9L77QExPmI0?si=Aw2I4HHvuIZyV9lf" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 """
 
 __version__ = "0.2.16"
