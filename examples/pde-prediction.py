@@ -25,8 +25,8 @@ def kuramoto_sivashinsky(space_: SpaceParameters, time_: TimeParameters) -> np.t
     L = space_.L         
     
     x = np.linspace(0, L, N, endpoint=False)
-    k = np.fft.fftfreq(N, d=L/N) * 2 * np.pi
-    k = 1j * k
+    a = np.fft.fftfreq(N, d=L/N) * 2 * np.pi
+    k = 1j * a
     
     dt = time_.dt           
     T = time_.tmax        
