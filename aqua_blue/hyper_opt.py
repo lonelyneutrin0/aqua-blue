@@ -1,5 +1,5 @@
 import numpy as np
-import hyperopt
+import hyperopt # type: ignore
 
 from typing import Optional, Callable, TypedDict, Literal, Union
 from numpy.typing import NDArray

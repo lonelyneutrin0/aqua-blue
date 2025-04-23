@@ -84,6 +84,7 @@ jobs:
     permissions:
       contents: read
 
+    # TODO: version-pin setuptools
     steps:
       - uses: actions/checkout@v4
         with:
@@ -94,7 +95,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Set up examples environment
         run: >-
-          pip install .[examples]
+          pip install --upgrade setuptools; pip install .[examples]
       - name: Run example scripts
         run: >-
           for file in examples/*.py; do python "$file"; done
