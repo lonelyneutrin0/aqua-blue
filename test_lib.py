@@ -239,7 +239,7 @@ def test_datetime_series():
 
     dependent_variables = np.vstack((np.cos(steps), np.sin(steps))).T
     
-    return time_series.TimeSeries(
+    _ = time_series.TimeSeries(
         dependent_variable=dependent_variables, 
         times=times_
     )
@@ -252,7 +252,7 @@ def test_from_iter_float():
             yield a
             a += 1
     
-    ts = datetimelikearray.DatetimeLikeArray.from_iter(gen, float)
+    ts = datetimelikearray.DatetimeLikeArray.from_iter(gen(), float)
     
     assert(ts == np.arange(10))
 
@@ -272,7 +272,7 @@ def test_from_iter_naive():
             yield time_init + timedelta(seconds=3600*i)
             i += 1
     
-    ts = datetimelikearray.DatetimeLikeArray.from_iter(gen, 'datetime64[s]')
+    ts = datetimelikearray.DatetimeLikeArray.from_iter(gen(), 'datetime64[s]')
     assert(ts == list(gen()))
 
 
@@ -291,7 +291,7 @@ def test_from_iter_aware():
             yield time_init + timedelta(seconds=3600*i)
             i += 1
     
-    ts = datetimelikearray.DatetimeLikeArray.from_iter(gen, 'datetime64[s]', tz=ZoneInfo("America/Chicago"))
+    ts = datetimelikearray.DatetimeLikeArray.from_iter(gen(), 'datetime64[s]', tz=ZoneInfo("America/Chicago"))
     assert(ts.to_list() == list(gen()))
 
 
@@ -309,7 +309,10 @@ def test_csv_from_io(io_type):
 
     # write txt response to IO object, so we can use it like an fp
     with io_type() as file:
-        file.write(req.text)
+        content = req.text
+        if io_type is BytesIO:
+            content = req.text.encode("utf-8")
+        file.write(content)
         file.seek(0)
 
         _ = time_series.TimeSeries.from_csv(
