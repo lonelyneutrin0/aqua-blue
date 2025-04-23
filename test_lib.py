@@ -262,19 +262,17 @@ def test_from_iter_naive():
         year=2025,
         month=3,
         day=1,
-        hour=12,
-        tzinfo=ZoneInfo("UTC")
+        hour=12
     )
-    
-    def gen(): 
-        i = 0 
-        while i < 10: 
-            yield time_init + timedelta(seconds=3600*i)
-            i += 1
-    
-    ts = datetimelikearray.DatetimeLikeArray.from_iter(gen(), 'datetime64[s]')
-    assert(ts == list(gen()))
 
+    def gen():
+        i = 0
+        while i < 10:
+            yield time_init + timedelta(seconds=3600 * i)
+            i += 1
+
+    ts = datetimelikearray.DatetimeLikeArray.from_iter(gen(), 'datetime64[s]')
+    assert (ts.to_list() == list(gen()))
 
 def test_from_iter_aware():
     time_init = datetime(
