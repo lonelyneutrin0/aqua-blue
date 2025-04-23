@@ -224,7 +224,7 @@ def test_datetime_fileio(datetime_arr):
     assert loaded_series == datetime_arr
 
 
-def datetime_series(): 
+def test_datetime_series():
     times_ = datetimelikearray.DatetimeLikeArray.from_array(
         input_array=np.arange(
             np.datetime64('2021-01-01T00:00:00'), 
@@ -245,7 +245,7 @@ def datetime_series():
     )
 
 
-def from_iter_float():
+def test_from_iter_float():
     def gen(): 
         a = 0
         while a < 10: 
@@ -257,7 +257,7 @@ def from_iter_float():
     assert(ts == np.arange(10))
 
 
-def from_iter_naive(): 
+def test_from_iter_naive():
     time_init = datetime(
         year=2025,
         month=3,
@@ -276,7 +276,7 @@ def from_iter_naive():
     assert(ts == list(gen()))
 
 
-def from_iter_aware():
+def test_from_iter_aware():
     time_init = datetime(
         year=2025,
         month=3,
@@ -296,7 +296,7 @@ def from_iter_aware():
 
 
 @pytest.mark.parametrize("io_type", (StringIO, BytesIO))
-def csv_from_io(io_type):
+def test_csv_from_io(io_type):
 
     # grab csv data from somewhere online
     req = requests.get("https://www.ncei.noaa.gov/data/global-summary-of-the-day/access/2024/01001099999.csv")
