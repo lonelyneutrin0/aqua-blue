@@ -134,15 +134,8 @@ __author_emails__ = [
 ]
 __url__ = "https://github.com/Chicago-Club-Management-Company/aqua-blue"
 
-import warnings
-
 from . import utilities as utilities
 from . import reservoirs as reservoirs
 from . import readouts as readouts
 from . import models as models
 from . import time_series as time_series
-
-# hyperopt package uses pkg_resources
-with warnings.catch_warnings():
-    warnings.filterwarnings("ignore", message="pkg_resources is deprecated as an API", category=DeprecationWarning)
-    from . import hyper_opt as hyper_opt
