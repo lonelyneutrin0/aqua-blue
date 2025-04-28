@@ -6,7 +6,6 @@ import pytest
 import numpy as np
 
 from zoneinfo import ZoneInfo
-import requests
 
 from aqua_blue import time_series, utilities, reservoirs, readouts, models, datetimelikearray
 
@@ -296,8 +295,8 @@ def test_from_iter_aware():
 @pytest.mark.parametrize("io_type", (StringIO, BytesIO))
 def test_csv_from_io(io_type):
 
-    # grab csv data from somewhere online
-    req = requests.get("https://www.ncei.noaa.gov/data/global-summary-of-the-day/access/2024/01001099999.csv")
+    with open("assets/noaa-global-summary.csv", "r") as file:
+        content = file.read()
 
     # time col probably better referenced by name
     # timesteps aren't uniform after row 87
@@ -307,9 +306,8 @@ def test_csv_from_io(io_type):
 
     # write txt response to IO object, so we can use it like an fp
     with io_type() as file:
-        content = req.text
         if io_type is BytesIO:
-            content = req.text.encode("utf-8")
+            content = content.encode("utf-8")
         file.write(content)
         file.seek(0)
 
