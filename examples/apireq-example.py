@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-def main(): 
-    req = requests.get("https://www.ncei.noaa.gov/data/global-summary-of-the-day/access/2024/01001099999.csv")
+
+def main():
+
+    req = requests.get("https://raw.githubusercontent.com/Chicago-Club-Management-Company/aqua-blue/refs/heads/main/assets/noaa-global-summary.csv")
 
     time_col = "DATE"
     dependent_var_cols = ["TEMP"]
