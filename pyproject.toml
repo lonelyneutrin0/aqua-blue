@@ -51,7 +51,7 @@ examples = [
     "matplotlib~=3.9.4",
     "requests~=2.32.3",
     "torch~=2.7.0",
-    "sklearn~=1.6.1",
+    "scikit-learn~=1.6.1",
     "aqua-blue-hyperopt~=0.0.3"
 ]
 
