@@ -115,12 +115,13 @@ For my favorite video about logging in Python, see a wonderful video below by [m
 
 """
 
-__version__ = "0.2.17"
+__version__ = "0.2.18"
 __authors__ = [
     "Jacob Jeffries",
     "Hrishikesh Belagali",
     "Avik Thumati",
     "Ameen Mahmood",
+    "Jackson Henry",
     "Samuel Josephs",
 ]
 __author_emails__ = [
@@ -128,6 +129,7 @@ __author_emails__ = [
     "hrishikesh.belagali@ccmc.global",
     "avik.thumati@ccmc.global",
     "ameen.mahmood@ccmc.global",
+    "jackson.henry@ccmc.global",
     "samuel.josephs@ccmc.global"
 ]
 __url__ = "https://github.com/Chicago-Club-Management-Company/aqua-blue"

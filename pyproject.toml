@@ -30,6 +30,7 @@ dependencies = [
     "numpy>=2.0,<2.2",
     "tzdata~=2025.1",
     "python-dateutil~=2.9.0.post0",
+    "setuptools~=79.0.0"
 ]
 
 [project.urls]
@@ -44,6 +45,7 @@ dev = [
     "pdoc~=15.0.1",
     "types-python-dateutil~=2.9.0.20241206",
     "coverage~=7.8.0"
+    "coverage~=7.8.0"
 ]
 examples = [
     "scipy~=1.13.1", 
@@ -51,6 +53,7 @@ examples = [
     "requests~=2.32.3",
     "torch~=2.7.0",
     "sklearn~=1.6.1"
+    "aqua-blue-hyperopt~=0.0.3"
 ]
 
 [tool.hatch.version]
